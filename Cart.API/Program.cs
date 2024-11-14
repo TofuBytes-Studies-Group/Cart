@@ -17,6 +17,13 @@ builder.Services.AddSingleton<KafkaProducer>();
 builder.Services.AddHostedService<KafkaConsumer>();
 builder.Services.AddSingleton<TestService>();
 
+// Dependency injection for Redis
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration.GetConnectionString("RedisConnection");
+    options.InstanceName = "MTOGOCart_";
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
