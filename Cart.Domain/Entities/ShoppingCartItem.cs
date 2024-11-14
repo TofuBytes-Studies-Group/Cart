@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Cart.Domain.Exceptions;
 
 namespace Cart.Domain.Entities
 {
@@ -14,6 +15,10 @@ namespace Cart.Domain.Entities
         { 
             get
             {
+                if (Dish.Price == int.MaxValue || Quantity == int.MaxValue)
+                {
+                    throw new SumPriceMaxValueException("Cannot calculate price of items");
+                }
                 return Dish.Price * Quantity;
             }
         }
