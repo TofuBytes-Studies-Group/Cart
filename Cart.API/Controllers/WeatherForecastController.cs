@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using MTOGO.API.Services;
+using Cart.API.Services;
 
-namespace MTOGO.API.Controllers
+namespace Cart.API.Controllers
 {
     [ApiController]
     [Route("[controller]")]

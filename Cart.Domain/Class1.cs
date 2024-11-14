@@ -1,4 +1,4 @@
-﻿namespace MTOGO.Domain
+﻿namespace Card.Domain
 {
     public class Class1
     {

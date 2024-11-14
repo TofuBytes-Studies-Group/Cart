@@ -1,4 +1,4 @@
-namespace MTOGO.UnitTests
+namespace Cart.UnitTests
 {
     public class UnitTest1
     {

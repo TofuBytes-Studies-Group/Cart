@@ -1,6 +1,6 @@
-using MTOGO.API.Kafka;
-using MTOGO.API.Services;
-using MTOGO.Infrastructure.Kafka;
+using Card.API.Kafka;
+using Card.Infrastructure.Kafka;
+using Cart.API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 

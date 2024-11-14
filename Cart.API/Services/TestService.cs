@@ -1,7 +1,6 @@
-﻿
-using MTOGO.Infrastructure.Kafka;
+﻿using Card.Infrastructure.Kafka;
 
-namespace MTOGO.API.Services
+namespace Cart.API.Services
 {
     public class TestService  
     {
