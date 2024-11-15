@@ -17,7 +17,7 @@ namespace Cart.Domain.Aggregates
 
         public void AddToCart(Dish dish, int quantity)
         {
-            if (quantity <= 0) throw new ZeroQuantityException("Quantity cannot be zero");
+            if (quantity <= 0) throw new ZeroOrNegativeQuantityException("Quantity cannot be zero or less");
 
             var existingCartItem = CartItems.FirstOrDefault(cartItem => cartItem.Dish.Id == dish.Id);
             if (existingCartItem != null)
@@ -36,6 +36,21 @@ namespace Cart.Domain.Aggregates
             if (item != null)
             {
                 CartItems.Remove(item);
+            }
+            else
+            {
+                throw new ItemNotInCartException("Item not found in cart");
+            }
+        }
+
+        public void UpdateItemQuantity(Guid dishId, int newQuantity)
+        {
+            if (newQuantity <= 0) throw new ZeroOrNegativeQuantityException("Quantity cannot be zero or less");
+
+            var item = CartItems.FirstOrDefault(cartItem => cartItem.Dish.Id == dishId);
+            if (item != null)
+            {
+                item.Quantity = newQuantity;
             }
             else
             {

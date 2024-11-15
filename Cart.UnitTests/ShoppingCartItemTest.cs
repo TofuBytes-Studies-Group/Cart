@@ -36,7 +36,7 @@ namespace Cart.UnitTests
         [Theory]
         [InlineData(int.MaxValue, 2, "Cannot calculate price of items")]
         [InlineData(2, int.MaxValue, "Cannot calculate price of items")]
-        public void New_ShouldCalculateSumPrice_ThrowsEsception(int price, int quantity, string expectedErrorMessage)
+        public void New_ShouldCalculateSumPrice_ShouldThrowSumPriceMaxValueEsception(int price, int quantity, string expectedErrorMessage)
         {
             // Arrange 
             var dish = new Dish

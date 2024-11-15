@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace Cart.Domain.Exceptions
 {
-    public class ZeroQuantityException : Exception
+    public class ZeroOrNegativeQuantityException : Exception
     {
-        public ZeroQuantityException(string message) : base(message) { }
+        public ZeroOrNegativeQuantityException(string message) : base(message) { }
     }
 }

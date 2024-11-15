@@ -112,8 +112,11 @@ namespace Cart.UnitTests
             Assert.Contains(cart.CartItems, item => item.Dish.Name == "Dish1" && item.Quantity == expectedTotalQuantityOfCartItems);
         }
 
-        [Fact]
-        public void RemoveFromCart_ShouldRemoveFromCart()
+        [Theory]
+        [InlineData(1)]
+        [InlineData(2)]
+        [InlineData(10)]
+        public void RemoveFromCart_ShouldRemoveFromCart(int quantity)
         {
             // Arrange 
             var dishId = Guid.NewGuid();
@@ -126,7 +129,7 @@ namespace Cart.UnitTests
                     new ShoppingCartItem
                     {
                         Dish = dish,
-                        Quantity = 1
+                        Quantity = quantity
                     }
                 }
             };
@@ -139,7 +142,7 @@ namespace Cart.UnitTests
         }
 
         [Fact]
-        public void RemoveFromCart_ItemNotInCart_ShouldThrowException()
+        public void RemoveFromCart_ItemNotInCart_ShouldThrowItemNotInCartException()
         {
             // Arrange 
             var cart = new ShoppingCart { Username = "Testuser1" };
@@ -181,5 +184,72 @@ namespace Cart.UnitTests
             Assert.Single(cart.CartItems);
             Assert.Contains(cart.CartItems, item => item.Dish.Name == "Dish2" && item.Quantity == 1);    
         }
+
+        [Theory]
+        [InlineData(1, 2, 2)] 
+        [InlineData(2, 4, 4)]
+        [InlineData(10, 9, 9)]
+        public void UpdateItemQuantity_ShouldUpdateItemQuantity(int quantityInCart, int newQuantity, int expectedQuantityInCart)
+        {
+            // Arrange 
+            var dishId = Guid.NewGuid();
+            var dish = new Dish { Id = dishId, Name = "Dish1", Price = 1 };
+            var cart = new ShoppingCart
+            {
+                Username = "Testuser1",
+                CartItems = new List<ShoppingCartItem>
+                {
+                    new ShoppingCartItem
+                    {
+                        Dish = dish,
+                        Quantity = quantityInCart
+                    }
+                }
+            };
+
+            // Act
+            cart.UpdateItemQuantity(dishId, newQuantity);
+
+            // Assert
+            Assert.Equal(expectedQuantityInCart, cart.CartItems.Sum(item => item.Quantity));
+        }
+
+        [Theory]
+        [InlineData(0)]
+        [InlineData(-1)]
+        [InlineData(-10)]
+        public void UpdateItemQuantity_ZeroOrNegativeQuantity_ShouldThrowZeroOrNegativeQuantityException(int newQuantity)
+        {
+            // Arrange 
+            var dishId = Guid.NewGuid();
+            var dish = new Dish { Id = dishId, Name = "Dish1", Price = 1 };
+            var cart = new ShoppingCart
+            {
+                Username = "Testuser1",
+                CartItems = new List<ShoppingCartItem>
+                {
+                    new ShoppingCartItem
+                    {
+                        Dish = dish,
+                        Quantity = 1
+                    }
+                }
+            };
+
+            // Act 6 Assert
+            var exception = Assert.Throws<ZeroOrNegativeQuantityException>(() => cart.UpdateItemQuantity(Guid.NewGuid(), newQuantity));
+            Assert.Equal("Quantity cannot be zero or less", exception.Message);
+        }
+
+        [Fact]
+        public void UpdateItemQuantity_ItemNotInCart_ShouldItemNotInCartThrowException()
+        {
+            //Arrange
+            var cart = new ShoppingCart { Username = "TestUser1" };
+
+            // Act & Assert
+            var exception = Assert.Throws<ItemNotInCartException>(() => cart.UpdateItemQuantity(Guid.NewGuid(), 1));
+            Assert.Equal("Item not found in cart", exception.Message);
+        } 
     }
 }
