@@ -11,7 +11,7 @@ namespace Cart.Domain.Entities
     {
         public required Dish Dish { get; set; }
         public int Quantity { get; set; }
-        public decimal SumPrice 
+        public int SumPrice 
         { 
             get
             {
