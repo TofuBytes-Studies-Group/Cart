@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Cart.Domain.Entities;
+﻿using Cart.Domain.Entities;
+using Cart.Domain.Exceptions;
 
 namespace Cart.Domain.Aggregates
 {
@@ -15,12 +11,22 @@ namespace Cart.Domain.Aggregates
         {
             get
             {
-                int totalPrice = 0;
-                foreach (var cartItem in CartItems)
-                {
-                    totalPrice += cartItem.SumPrice;
-                }
-                return totalPrice;
+                return CartItems.Sum(cartItem => cartItem.SumPrice);
+            }
+        }
+
+        public void AddToCart(Dish dish, int quantity)
+        {
+            if (quantity <= 0) throw new ZeroQuantityException("Quantity cannot be zero");
+
+            var existingCartItem = CartItems.FirstOrDefault(cartItem => cartItem.Dish.Id == dish.Id);
+            if (existingCartItem != null)
+            {
+                existingCartItem.Quantity += quantity;
+            }
+            else
+            {
+                CartItems.Add(new ShoppingCartItem { Dish = dish, Quantity = quantity });
             }
         }
     }
