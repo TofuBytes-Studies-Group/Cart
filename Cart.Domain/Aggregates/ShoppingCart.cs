@@ -29,5 +29,18 @@ namespace Cart.Domain.Aggregates
                 CartItems.Add(new ShoppingCartItem { Dish = dish, Quantity = quantity });
             }
         }
+
+        public void RemoveFromCart(Guid dishId)
+        {
+            var item = CartItems.FirstOrDefault(cartItem => cartItem.Dish.Id == dishId);
+            if (item != null)
+            {
+                CartItems.Remove(item);
+            }
+            else
+            {
+                throw new ItemNotInCartException("Item not found in cart");
+            }
+        }
     }
 }

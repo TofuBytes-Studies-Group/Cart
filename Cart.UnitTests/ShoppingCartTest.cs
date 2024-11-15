@@ -1,7 +1,7 @@
 ﻿using Cart.Domain.Aggregates;
 using Cart.Domain.Entities;
+using Cart.Domain.Exceptions;
 using Cart.UnitTests.Helpers;
-using System.Diagnostics;
 
 namespace Cart.UnitTests
 {
@@ -46,7 +46,7 @@ namespace Cart.UnitTests
         [InlineData(1, 1, 1, 1, 2, 2)]
         [InlineData(100, 2, 50, 1, 250, 3)]
         [InlineData(100, 10, 200, 2, 1400, 12)]
-        public void AddToCart_AddNewItemToCartWithItems_ShouldAddToCartItemsAndUpdateTotalPrice(int priceOfDishInCart, 
+        public void AddToCart_AddNewItemToCartWithItems_ShouldAddToCartItemsAndUpdateTotalPrice(int priceOfDishInCart,
             int quantityOfDishInCart,
             int priceOfNewDish, int quantityOfNewDish,
             int expectedTotalPrice, int expectedTotalQuantityOfCartItems)
@@ -82,7 +82,7 @@ namespace Cart.UnitTests
         [InlineData(1, 1, 1, 2, 2)]
         [InlineData(100, 1, 4, 500, 5)]
         [InlineData(100, 10, 10, 2000, 20)]
-        public void AddToCart_AddSameItemToCartWithItems_ShouldAddToCartItemsAndUpdateTotalPrice(int price, 
+        public void AddToCart_AddSameItemToCartWithItems_ShouldAddToCartItemsAndUpdateTotalPrice(int price,
             int quantityOfDishInCart, int quantityToAdd,
             int expectedTotalPrice, int expectedTotalQuantityOfCartItems)
         {
@@ -110,6 +110,76 @@ namespace Cart.UnitTests
             Assert.Equal(expectedTotalPrice, cart.TotaltPrice);
             Assert.Single(cart.CartItems);
             Assert.Contains(cart.CartItems, item => item.Dish.Name == "Dish1" && item.Quantity == expectedTotalQuantityOfCartItems);
+        }
+
+        [Fact]
+        public void RemoveFromCart_ShouldRemoveFromCart()
+        {
+            // Arrange 
+            var dishId = Guid.NewGuid();
+            var dish = new Dish { Id = dishId, Name = "Dish1", Price = 1 };
+            var cart = new ShoppingCart
+            {
+                Username = "Testuser1",
+                CartItems = new List<ShoppingCartItem>
+                {
+                    new ShoppingCartItem
+                    {
+                        Dish = dish,
+                        Quantity = 1
+                    }
+                }
+            };
+
+            // Act
+            cart.RemoveFromCart(dishId);
+
+            // Assert
+            Assert.Empty(cart.CartItems);
+        }
+
+        [Fact]
+        public void RemoveFromCart_ItemNotInCart_ShouldThrowException()
+        {
+            // Arrange 
+            var cart = new ShoppingCart { Username = "Testuser1" };
+
+            // Act & Assert
+            var exception = Assert.Throws<ItemNotInCartException>(() => cart.RemoveFromCart(Guid.NewGuid()));
+            Assert.Equal("Item not found in cart", exception.Message);
+        }
+
+        [Fact]
+        public void RemoveFromCart_OtherItemsInCart_ShouldRemoveOnlySpecificItemFromCart()
+        {
+            // Arrange 
+            var dishId = Guid.NewGuid();
+            var dish = new Dish { Id = dishId, Name = "Dish1", Price = 1 };
+            var cart = new ShoppingCart
+            {
+                Username = "Testuser1",
+                CartItems = new List<ShoppingCartItem>
+                {
+                    new ShoppingCartItem
+                    {
+                        Dish = dish,
+                        Quantity = 1
+                    },
+                    new ShoppingCartItem
+                    {
+                        Dish = new Dish { Id = Guid.NewGuid(), Name = "Dish2", Price = 1 },
+                        Quantity = 1
+                    }
+                }
+            };
+
+            // Act
+            cart.RemoveFromCart(dishId);
+
+            // Assert
+            Assert.DoesNotContain(cart.CartItems, item => item.Dish.Id == dishId && item.Dish.Name == "Dish1");
+            Assert.Single(cart.CartItems);
+            Assert.Contains(cart.CartItems, item => item.Dish.Name == "Dish2" && item.Quantity == 1);    
         }
     }
 }
