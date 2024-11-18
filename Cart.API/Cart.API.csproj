@@ -16,7 +16,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Cart.Domain\Cart.Domain.csproj" />
     <ProjectReference Include="..\Cart.Infrastructure\Cart.Infrastructure.csproj" />
-    <ProjectReference Include="..\Cart.UnitTests\Cart.UnitTests.csproj" />
   </ItemGroup>
 
 </Project>
