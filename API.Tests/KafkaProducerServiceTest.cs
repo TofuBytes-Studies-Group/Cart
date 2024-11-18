@@ -1,4 +1,5 @@
 using Cart.API.Services;
+using Cart.Domain.Aggregates;
 using Cart.Infrastructure.Kafka;
 using Moq;
 
@@ -7,39 +8,27 @@ namespace API.Tests
     public class KafkaProducerServiceTest
     {
         [Fact]
-        public void DoStuff_CallsProduceAsyncWithCorrectArguments()
-        {
+        public async void Produce_ShouldProduceToCorrectTopicAndWithKeyFromService()
+        { 
             // Arrange
             var kafkaProducerMock = new Mock<IKafkaProducer>();
             var service = new KafkaProducerService(kafkaProducerMock.Object);
 
-            string? actualTopic = null;
-            string? actualKey = null;
-            string? actualValue = null;
+            var cart = new ShoppingCart { Username = "TestUser1" };
 
             kafkaProducerMock
-                .Setup(producer => producer.ProduceAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
-                .Callback<string, string, string>((topic, key, value) =>
-                {
-                    actualTopic = topic;
-                    actualKey = key;
-                    actualValue = value;
-                })
+                .Setup(p => p.ProduceAsync<ShoppingCart>(
+                    It.IsAny<string>(), It.IsAny<string>(), It.IsAny<ShoppingCart>()))
                 .Returns(Task.CompletedTask);
 
             // Act
-            service.DoStuff();
+            await service.Produce(cart);
 
             // Assert
-            kafkaProducerMock.Verify(
-                producer => producer.ProduceAsync("topic", "Virker", "From DOSTUFF"),
+            kafkaProducerMock.Verify(p => p.ProduceAsync<ShoppingCart>("topic", "Key", cart),
                 Times.Once);
 
             kafkaProducerMock.VerifyNoOtherCalls();
-
-            Assert.Equal("topic", actualTopic);
-            Assert.Equal("Virker", actualKey);
-            Assert.Equal("From DOSTUFF", actualValue);
         }
     }
 }

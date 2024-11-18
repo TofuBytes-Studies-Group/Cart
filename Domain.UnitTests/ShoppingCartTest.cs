@@ -11,7 +11,7 @@ namespace Cart.UnitTests
         [Theory]
         // Arrange
         [ClassData(typeof(ShoppingCartTestData))]
-        public void New_ShouldCalculateTotalPrice(ShoppingCart shoppingCart, int expectedTotalPrice)
+        public void New_ShouldCalculateCorrectTotalPrice(ShoppingCart shoppingCart, int expectedTotalPrice)
         {
             // Act
             var actualTotalPrice = shoppingCart.TotalPrice;
@@ -116,9 +116,9 @@ namespace Cart.UnitTests
         [InlineData(1)]
         [InlineData(2)]
         [InlineData(10)]
-        public void RemoveFromCart_ShouldRemoveFromCart(int quantity)
+        public void RemoveFromCart_ShouldRemoveEntirelyFromCartNoMatterTheQuantity(int quantity)
         {
-            // Arrange 
+            // Arrange  
             var dishId = Guid.NewGuid();
             var dish = new Dish { Id = dishId, Name = "Dish1", Price = 1 };
             var cart = new ShoppingCart
@@ -242,7 +242,7 @@ namespace Cart.UnitTests
         }
 
         [Fact]
-        public void UpdateItemQuantity_ItemNotInCart_ShouldItemNotInCartThrowException()
+        public void UpdateItemQuantity_ItemNotInCart_ShouldThrowItemNotInCartThrowException()
         {
             //Arrange
             var cart = new ShoppingCart { Username = "TestUser1" };

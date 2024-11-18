@@ -10,7 +10,7 @@ namespace Cart.UnitTests
         [InlineData(1, 1, 1)]
         [InlineData(2, 2, 4)]
         [InlineData(10, 5, 50)]
-        public void New_ShouldCalculateSumPrice(int price, int quantity, int expectedSum)
+        public void New_ShouldCalculateCorrectSumPrice(int price, int quantity, int expectedSum)
         {
             // Arrange 
             var dish = new Dish
@@ -36,9 +36,9 @@ namespace Cart.UnitTests
         [Theory]
         [InlineData(int.MaxValue, 2, "Cannot calculate price of items")]
         [InlineData(2, int.MaxValue, "Cannot calculate price of items")]
-        public void New_ShouldCalculateSumPrice_ShouldThrowSumPriceMaxValueEsception(int price, int quantity, string expectedErrorMessage)
+        public void New_WithMaxIntValue_ShouldThrowSumPriceMaxValueException(int price, int quantity, string expectedErrorMessage)
         {
-            // Arrange 
+            // Arrange
             var dish = new Dish
             {
                 Id = Guid.NewGuid(),

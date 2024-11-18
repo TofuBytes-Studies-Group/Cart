@@ -1,4 +1,5 @@
-﻿using Cart.Infrastructure.Kafka;
+﻿using Cart.Domain.Aggregates;
+using Cart.Infrastructure.Kafka;
 
 namespace Cart.API.Services
 {
@@ -13,7 +14,12 @@ namespace Cart.API.Services
         public async void DoStuff()
         {
             // Brug KafkaProducer
-            await _kafkaProducer.ProduceAsync("topic", "Virker", "From DOSTUFF");
+            await _kafkaProducer.ProduceAsync("topic", "Virker", new ShoppingCart { Username = "TestUser1"});
+        }
+
+        public async Task Produce(ShoppingCart cart)
+        {
+            await _kafkaProducer.ProduceAsync<ShoppingCart>("topic", "Key", cart);
         }
     }
 }
