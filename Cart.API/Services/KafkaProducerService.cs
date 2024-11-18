@@ -1,11 +1,11 @@
-﻿using Card.Infrastructure.Kafka;
+﻿using Cart.Infrastructure.Kafka;
 
 namespace Cart.API.Services
 {
-    public class TestService  
+    public class KafkaProducerService  
     {
-        private readonly KafkaProducer _kafkaProducer;
-        public TestService(KafkaProducer kafkaProducer)
+        private readonly IKafkaProducer _kafkaProducer;
+        public KafkaProducerService(IKafkaProducer kafkaProducer)
         {
             _kafkaProducer = kafkaProducer;
         }

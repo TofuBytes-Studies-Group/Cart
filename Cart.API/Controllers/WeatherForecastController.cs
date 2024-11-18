@@ -13,9 +13,9 @@ namespace Cart.API.Controllers
         };
 
         private readonly ILogger<WeatherForecastController> _logger;
-        private readonly TestService _testService;
+        private readonly KafkaProducerService _testService;
 
-        public WeatherForecastController(ILogger<WeatherForecastController> logger, TestService testService)
+        public WeatherForecastController(ILogger<WeatherForecastController> logger, KafkaProducerService testService)
         {
             _logger = logger;
             _testService = testService;

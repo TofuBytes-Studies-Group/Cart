@@ -1,10 +1,11 @@
-﻿using Confluent.Kafka;
+﻿using Cart.Infrastructure.Kafka;
+using Confluent.Kafka;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace Card.Infrastructure.Kafka
 {
-    public class KafkaProducer : IDisposable
+    public class KafkaProducer : IKafkaProducer, IDisposable
     {
         private readonly IConfiguration _configuration;
         private readonly ILogger<KafkaProducer> _logger;

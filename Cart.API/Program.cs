@@ -1,6 +1,7 @@
 using Card.API.Kafka;
 using Card.Infrastructure.Kafka;
 using Cart.API.Services;
+using Cart.Infrastructure.Kafka;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,10 +13,10 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // Add the producer service as singletons:
-builder.Services.AddSingleton<KafkaProducer>();
+builder.Services.AddSingleton<IKafkaProducer, KafkaProducer>();
 // Add the kafka consumer service as a hosted service (background service that runs for the lifetime of the application):
 builder.Services.AddHostedService<KafkaConsumer>();
-builder.Services.AddSingleton<TestService>();
+builder.Services.AddSingleton<KafkaProducerService>();
 
 // Dependency injection for Redis
 builder.Services.AddStackExchangeRedisCache(options =>
