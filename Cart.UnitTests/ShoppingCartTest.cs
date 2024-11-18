@@ -14,7 +14,7 @@ namespace Cart.UnitTests
         public void New_ShouldCalculateTotalPrice(ShoppingCart shoppingCart, int expectedTotalPrice)
         {
             // Act
-            var actualTotalPrice = shoppingCart.TotaltPrice;
+            var actualTotalPrice = shoppingCart.TotalPrice;
 
             // Assert
             Assert.Equal(expectedTotalPrice, actualTotalPrice);
@@ -36,7 +36,7 @@ namespace Cart.UnitTests
 
             // Assert
             Assert.Equal(expectedSizeOfCart, cart.CartItems.Sum(item => item.Quantity));
-            Assert.Equal(expectedTotalPrice, cart.TotaltPrice);
+            Assert.Equal(expectedTotalPrice, cart.TotalPrice);
             Assert.Single(cart.CartItems);
             Assert.Contains(cart.CartItems, item => item.Dish.Name == "Dish1" && item.Quantity == quantity);
 
@@ -72,7 +72,7 @@ namespace Cart.UnitTests
             // Assert
             Assert.Equal(expectedTotalQuantityOfCartItems, cart.CartItems.Sum(item => item.Quantity));
             Assert.Equal(2, cart.CartItems.Count);
-            Assert.Equal(expectedTotalPrice, cart.TotaltPrice);
+            Assert.Equal(expectedTotalPrice, cart.TotalPrice);
             Assert.Contains(cart.CartItems, item => item.Dish.Name == "Dish1" && item.Quantity == quantityOfDishInCart);
             Assert.Contains(cart.CartItems, item => item.Dish.Name == "Dish2" && item.Quantity == quantityOfNewDish);
         }
@@ -107,7 +107,7 @@ namespace Cart.UnitTests
 
             // Assert
             Assert.Equal(expectedTotalQuantityOfCartItems, cart.CartItems.Sum(item => item.Quantity));
-            Assert.Equal(expectedTotalPrice, cart.TotaltPrice);
+            Assert.Equal(expectedTotalPrice, cart.TotalPrice);
             Assert.Single(cart.CartItems);
             Assert.Contains(cart.CartItems, item => item.Dish.Name == "Dish1" && item.Quantity == expectedTotalQuantityOfCartItems);
         }

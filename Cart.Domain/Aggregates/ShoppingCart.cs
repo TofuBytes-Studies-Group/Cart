@@ -7,7 +7,7 @@ namespace Cart.Domain.Aggregates
     {
         public required string Username { get; set; }
         public List<ShoppingCartItem> CartItems { get; set; } = new List<ShoppingCartItem>();
-        public int TotaltPrice
+        public int TotalPrice
         {
             get
             {
