@@ -5,17 +5,17 @@ namespace Cart.API.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class WeatherForecastController : ControllerBase
+    public class ShoppingCartController : ControllerBase
     {
         private static readonly string[] Summaries = new[]
         {
             "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
         };
 
-        private readonly ILogger<WeatherForecastController> _logger;
+        private readonly ILogger<ShoppingCartController> _logger;
         private readonly KafkaProducerService _testService;
 
-        public WeatherForecastController(ILogger<WeatherForecastController> logger, KafkaProducerService testService)
+        public ShoppingCartController(ILogger<ShoppingCartController> logger, KafkaProducerService testService)
         {
             _logger = logger;
             _testService = testService;

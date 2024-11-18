@@ -15,27 +15,29 @@ namespace Cart.Domain.Aggregates
             }
         }
 
-        public void AddToCart(Dish dish, int quantity)
+        public void AddOneToCart(Dish dish)
         {
-            if (quantity <= 0) throw new ZeroOrNegativeQuantityException("Quantity cannot be zero or less");
-
             var existingCartItem = CartItems.FirstOrDefault(cartItem => cartItem.Dish.Id == dish.Id);
             if (existingCartItem != null)
             {
-                existingCartItem.Quantity += quantity;
+                existingCartItem.Quantity += 1;
             }
             else
             {
-                CartItems.Add(new ShoppingCartItem { Dish = dish, Quantity = quantity });
+                CartItems.Add(new ShoppingCartItem { Dish = dish, Quantity = 1 });
             }
         }
 
-        public void RemoveFromCart(Guid dishId)
+        public void RemoveOneFromCart(Guid dishId)
         {
             var item = CartItems.FirstOrDefault(cartItem => cartItem.Dish.Id == dishId);
             if (item != null)
             {
-                CartItems.Remove(item);
+                item.Quantity -= 1;
+                if (item.Quantity <= 0)
+                {
+                    CartItems.Remove(item);
+                }
             }
             else
             {
@@ -43,14 +45,12 @@ namespace Cart.Domain.Aggregates
             }
         }
 
-        public void UpdateItemQuantity(Guid dishId, int newQuantity)
+        public void RemoveAllFromCart(Guid dishId)
         {
-            if (newQuantity <= 0) throw new ZeroOrNegativeQuantityException("Quantity cannot be zero or less");
-
             var item = CartItems.FirstOrDefault(cartItem => cartItem.Dish.Id == dishId);
             if (item != null)
             {
-                item.Quantity = newQuantity;
+                CartItems.Remove(item);
             }
             else
             {

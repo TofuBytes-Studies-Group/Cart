@@ -1,8 +1,7 @@
-using System.Threading.Tasks;
 using Cart.Domain.Entities;
 using Cart.Domain.Exceptions;
 
-namespace Cart.UnitTests
+namespace Domain.UnitTests
 {
     public class ShoppingCartItemTest
     {

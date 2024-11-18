@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using Cart.Domain.Aggregates;
 using Cart.Domain.Entities;
-namespace Cart.UnitTests.Helpers
+namespace Domain.UnitTests.Helpers
 {
     public class ShoppingCartTestData : IEnumerable<object[]>
     {
