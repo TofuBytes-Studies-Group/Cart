@@ -222,5 +222,57 @@ namespace API.Tests
             var notFoundResult = Assert.IsType<NotFoundObjectResult>(result.Result);
             Assert.Equal("Item not found in cart", notFoundResult.Value);
         }
+
+        [Fact]
+        public async void Order_UserHasCart_ShouldSendKafkaMessageAndReturnAccepted()
+        {
+            // Arrange
+            var loggerMock = new Mock<ILogger<CartController>>();
+            var kafkaProducerMock = new Mock<IKafkaProducer>();
+            var kafkaService = new KafkaProducerService(kafkaProducerMock.Object);
+
+            kafkaProducerMock
+                .Setup(p => p.ProduceAsync<ShoppingCart>(
+                    It.IsAny<string>(), It.IsAny<string>(), It.IsAny<ShoppingCart>()))
+                .Returns(Task.CompletedTask);
+
+            var cartService = new CartService(kafkaService);
+            var controller = new CartController(
+                    loggerMock.Object,
+                    kafkaService,
+                    cartService);
+
+            string username = "TestUser1";
+            var dish = new Dish { Id = Guid.NewGuid(), Name = "Dish1", Price = 1 };
+            var cart = cartService.AddOneToCart(username, dish);
+
+            // Act
+            var result = await controller.Order(username);
+
+            // Assert
+            kafkaProducerMock.Verify(p => p.ProduceAsync<ShoppingCart>(
+                "topic", "Key", It.Is<ShoppingCart>(c => c.Username == username && c.CartItems.Count == 1)),
+                Times.Once);
+
+            kafkaProducerMock.VerifyNoOtherCalls();
+
+            var acceptedResult = Assert.IsType<AcceptedResult>(result);
+            Assert.Equal("Your order is being processed", acceptedResult.Location);
+        }
+
+        [Fact]
+        public async void Order_UserHasEmptyCart_ShouldReturnBadRequest()
+        {
+            // Arrange
+            var controller = SetUp();
+            var username = "nonexistentUser";
+
+            // Act
+            var result = await controller.Order(username);
+
+            // Assert
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            Assert.Equal("Cannot place an order with an empty cart", badRequestResult.Value);
+        }
     }
 }

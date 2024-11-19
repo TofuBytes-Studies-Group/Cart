@@ -3,6 +3,7 @@ using Cart.API.Services;
 using Cart.Domain.Aggregates;
 using Cart.Domain.Entities;
 using Cart.Domain.Exceptions;
+using Card.API.Kafka;
 
 namespace Cart.API.Controllers
 {
@@ -83,5 +84,30 @@ namespace Cart.API.Controllers
                 return NotFound(ex.Message);
             }
         }
+
+        [HttpPost("{username}/order")]
+        public async Task<ActionResult> Order(string username)
+        {
+            try
+            {
+                _logger.LogInformation("Processing order for user: {Username}", username);
+                var cart = _cartService.GetCart(username);
+                if (!cart.CartItems.Any())
+                {
+                    _logger.LogWarning("Order failed: Cart is empty for user: {Username}", username);
+                    return BadRequest("Cannot place an order with an empty cart");
+                }
+                _logger.LogInformation("Order creation initiated for user: {Username}", username);
+                await _kafkaProducerService.Produce(cart);
+
+                return Accepted("Your order is being processed");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Order failed for user: {Username}, Reason: {Error}", username, ex.Message);
+                return StatusCode(500, "An error occurred while processing your order");
+            }
+        }
+
     }
 }
