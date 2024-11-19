@@ -109,6 +109,23 @@ namespace API.Tests
         }
 
         [Fact]
+        public void AddOneToCart_ItemIsNull_ReturnBadRequest()
+        {
+            // Arrange
+            var controller = SetUp();
+
+            var username = "TestUser1";
+
+            // Act
+            var result = controller.AddOneToCart(username, null);
+
+            // Assert
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result.Result);
+            Assert.Equal("Dish cannot be null.", badRequestResult.Value);
+
+        }
+
+        [Fact]
         public void RemoveOneFromCart_ItemAlreadyInCart_ShouldDecreaseQuantityByOne()
         {
             // Arrange

@@ -10,51 +10,41 @@ namespace Cart.API.Controllers
     [Route("[controller]")]
     public class CartController : ControllerBase
     {
-        private static readonly string[] Summaries = new[]
-        {
-            "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-        };
-
         private readonly ILogger<CartController> _logger;
-        private readonly KafkaProducerService _testService;
+        private readonly KafkaProducerService _kafkaProducerService;
         private readonly CartService _cartService;
 
-        public CartController(ILogger<CartController> logger, KafkaProducerService testService, CartService cartService)
+        public CartController(ILogger<CartController> logger, KafkaProducerService kafkaProducerService, CartService cartService)
         {
             _logger = logger;
-            _testService = testService;
+            _kafkaProducerService = kafkaProducerService;
             _cartService = cartService;
-        }
-
-
-        [HttpGet(Name = "GetWeatherForecast")]
-        public IEnumerable<WeatherForecast> Get()
-        {
-            _logger.LogInformation("Guid: " + Guid.NewGuid().ToString());
-            _testService.DoStuff();
-
-            return Enumerable.Range(1, 5).Select(index => new WeatherForecast
-            {
-                Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                TemperatureC = Random.Shared.Next(-20, 55),
-                Summary = Summaries[Random.Shared.Next(Summaries.Length)]
-            })
-            .ToArray();
         }
 
         [HttpGet("{username}")]
         public ActionResult<ShoppingCart> GetCart(string username)
         {
+            _logger.LogInformation("Fetching cart for user: {Username}", username);
+
             var cart = _cartService.GetCart(username);
+            _logger.LogInformation("Cart fetched successfully for user: {Username}", username);
+
             return Ok(cart);
         }
 
         [HttpPost("{username}/add-one")]
         public ActionResult<ShoppingCart> AddOneToCart(string username, [FromBody] Dish dish)
         {
-            if (dish == null) return BadRequest("Dish cannot be null.");
+            if (dish == null)
+            {
+                _logger.LogWarning("AddOneToCart failed: Dish is null for user: {Username}", username);
+                return BadRequest("Dish cannot be null.");
+            }
 
+            _logger.LogInformation("Adding dish to cart for user: {Username}, Dish: {DishName}", username, dish.Name);
             var cart = _cartService.AddOneToCart(username, dish);
+            _logger.LogInformation("Dish added to cart successfully for user: {Username}, Dish: {DishName}", username, dish.Name);
+
             return Ok(cart);
         }
 
@@ -63,11 +53,15 @@ namespace Cart.API.Controllers
         {
             try
             {
+                _logger.LogInformation("Removing one instance of dish from cart for user: {Username}, DishId: {DishId}", username, dishId);
                 var cart = _cartService.RemoveOneFromCart(username, dishId);
+                _logger.LogInformation("Dish removed successfully from cart for user: {Username}, DishId: {DishId}", username, dishId);
+
                 return Ok(cart);
             }
             catch (ItemNotInCartException ex)
             {
+                _logger.LogWarning("RemoveOneFromCart failed for user: {Username}, DishId: {DishId}. Reason: {Error}", username, dishId, ex.Message);
                 return NotFound(ex.Message);
             }
         }
@@ -77,11 +71,15 @@ namespace Cart.API.Controllers
         {
             try
             {
+                _logger.LogInformation("Removing all instances of dish from cart for user: {Username}, DishId: {DishId}", username, dishId);
                 var cart = _cartService.RemoveAllFromCart(username, dishId);
+                _logger.LogInformation("All instances of dish removed successfully from cart for user: {Username}, DishId: {DishId}", username, dishId);
+
                 return Ok(cart);
             }
             catch (ItemNotInCartException ex)
             {
+                _logger.LogWarning("RemoveAllFromCart failed for user: {Username}, DishId: {DishId}. Reason: {Error}", username, dishId, ex.Message);
                 return NotFound(ex.Message);
             }
         }

@@ -11,12 +11,6 @@ namespace Cart.API.Services
             _kafkaProducer = kafkaProducer;
         }
 
-        public async void DoStuff()
-        {
-            // Brug KafkaProducer
-            await _kafkaProducer.ProduceAsync("topic", "Virker", new ShoppingCart { Username = "TestUser1"});
-        }
-
         public async Task Produce(ShoppingCart cart)
         {
             await _kafkaProducer.ProduceAsync<ShoppingCart>("topic", "Key", cart);
