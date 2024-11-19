@@ -3,6 +3,7 @@ using Cart.API.Services;
 using Cart.Domain.Aggregates;
 using Cart.Domain.Entities;
 using Cart.Infrastructure.Kafka;
+using Cart.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -16,19 +17,51 @@ namespace API.Tests
         {
             // Arrange
             var loggerMock = new Mock<ILogger<CartController>>();
+
+            // Kafka Mock 
             var kafkaProducerMock = new Mock<IKafkaProducer>();
             var kafkaService = new KafkaProducerService(kafkaProducerMock.Object);
-            var cartService = new CartService(kafkaService);
-            var controller = new CartController(
-                    loggerMock.Object,
-                    kafkaService,
-                    cartService);
-            return controller;
+
+            // Repository Mock 
+            var cartDataStore = new Dictionary<string, ShoppingCart>();
+            var cartRepositoryMock = new Mock<ICartRepository>();
+
+            cartRepositoryMock
+                .Setup(repo => repo.GetCartAsync(It.IsAny<string>()))
+                .ReturnsAsync((string username) =>
+                {
+                    cartDataStore.TryGetValue(username, out var cart);
+                    return cart;
+                });
+
+            cartRepositoryMock
+                .Setup(repo => repo.SaveCartAsync(It.IsAny<ShoppingCart>()))
+                .Callback((ShoppingCart cart) =>
+                {
+                    cartDataStore[cart.Username] = cart;
+                })
+                .Returns(Task.CompletedTask);
+
+            cartRepositoryMock
+                .Setup(repo => repo.DeleteCartAsync(It.IsAny<string>()))
+                .Callback((string username) =>
+                {
+                    cartDataStore.Remove(username);
+                })
+                .Returns(Task.CompletedTask);
+
+            var cartService = new CartService(cartRepositoryMock.Object);
+
+            return new CartController(
+                loggerMock.Object,
+                kafkaService,
+                cartService);
         }
 
 
+
         [Fact]
-        public void GetCart_UserHasNoCart_ShouldReturnEmptyCart()
+        public async void GetCart_UserHasNoCart_ShouldReturnEmptyCart()
         {
             // Arrange
             var controller = SetUp();
@@ -36,7 +69,7 @@ namespace API.Tests
             string username = "nonexistentUser";
 
             // Act
-            var result = controller.GetCart(username);
+            var result = await controller.GetCartAsync(username);
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result.Result);
@@ -48,17 +81,17 @@ namespace API.Tests
         }
 
         [Fact]
-        public void GetCart_UserAlreadyHasCart_ShouldReturnUsersCart()
+        public async void GetCart_UserAlreadyHasCart_ShouldReturnUsersCart()
         {
             // Arrange
             var controller = SetUp();
 
             string username = "TestUser1";
             var dish = new Dish { Id = Guid.NewGuid(), Name = "Dish1", Price = 1 };
-            controller.AddOneToCart(username, dish);
+            await controller.AddOneToCartAsync(username, dish);
 
             // Act
-            var result = controller.GetCart(username);
+            var result = await controller.GetCartAsync(username);
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result.Result);
@@ -69,7 +102,7 @@ namespace API.Tests
         }
 
         [Fact]
-        public void AddOneToCart_ItemNotInCart_ShouldAddItemToCart()
+        public async void AddOneToCart_ItemNotInCart_ShouldAddItemToCart()
         {
             // Arrange
             var controller = SetUp();
@@ -78,7 +111,7 @@ namespace API.Tests
             var dish = new Dish { Id = Guid.NewGuid(), Name = "Dish1", Price = 1 };
 
             // Act
-            var result = controller.AddOneToCart(username, dish);
+            var result = await controller.AddOneToCartAsync(username, dish);
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result.Result);
@@ -89,17 +122,17 @@ namespace API.Tests
         }
 
         [Fact]
-        public void AddOneToCart_ItemAlreadyInCart_ShouldAddOneToQuantity()
+        public async void AddOneToCart_ItemAlreadyInCart_ShouldAddOneToQuantity()
         {
             // Arrange
             var controller = SetUp();
 
             string username = "TestUser1";
             var dish = new Dish { Id = Guid.NewGuid(), Name = "Dish1", Price = 1 };
-            controller.AddOneToCart(username, dish);
+            await controller.AddOneToCartAsync(username, dish);
 
             // Act
-            var result = controller.AddOneToCart(username, dish);
+            var result = await controller.AddOneToCartAsync(username, dish);
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result.Result);
@@ -109,7 +142,7 @@ namespace API.Tests
         }
 
         [Fact]
-        public void AddOneToCart_ItemIsNull_ReturnBadRequest()
+        public async void AddOneToCart_ItemIsNull_ReturnBadRequest()
         {
             // Arrange
             var controller = SetUp();
@@ -117,7 +150,7 @@ namespace API.Tests
             var username = "TestUser1";
 
             // Act
-            var result = controller.AddOneToCart(username, null);
+            var result = await controller.AddOneToCartAsync(username, null);
 
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result.Result);
@@ -126,7 +159,7 @@ namespace API.Tests
         }
 
         [Fact]
-        public void RemoveOneFromCart_ItemAlreadyInCart_ShouldDecreaseQuantityByOne()
+        public async void RemoveOneFromCart_ItemAlreadyInCart_ShouldDecreaseQuantityByOne()
         {
             // Arrange
             var controller = SetUp();
@@ -134,11 +167,11 @@ namespace API.Tests
             string username = "TestUser";
             var dishId = Guid.NewGuid();
             var dish = new Dish { Id = dishId, Name = "Dish1", Price = 1 };
-            controller.AddOneToCart(username, dish);
-            controller.AddOneToCart(username, dish);
+            await controller.AddOneToCartAsync(username, dish);
+            await controller.AddOneToCartAsync(username, dish);
 
             // Act
-            var result = controller.RemoveOneFromCart(username, dishId);
+            var result = await controller.RemoveOneFromCartAsync(username, dishId);
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result.Result);
@@ -148,7 +181,7 @@ namespace API.Tests
         }
 
         [Fact]
-        public void RemoveOneFromCart_OnlyOneItemInCart_ShouldRemoveItemCompletely()
+        public async void RemoveOneFromCart_OnlyOneItemInCart_ShouldRemoveItemCompletely()
         {
             // Arrange
             var controller = SetUp();
@@ -156,10 +189,10 @@ namespace API.Tests
             string username = "TestUser1";
             var dishId = Guid.NewGuid();
             var dish = new Dish { Id = dishId, Name = "Dish1", Price = 1 };
-            controller.AddOneToCart(username, dish);
+            await controller.AddOneToCartAsync(username, dish);
 
             // Act
-            var result = controller.RemoveOneFromCart(username, dishId);
+            var result = await controller.RemoveOneFromCartAsync(username, dishId);
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result.Result);
@@ -169,7 +202,7 @@ namespace API.Tests
         }
 
         [Fact]
-        public void RemoveOneFromCart_ItemNotInCart_ShouldReturnNotFound()
+        public async void RemoveOneFromCart_ItemNotInCart_ShouldReturnNotFound()
         {
             // Arrange
             var controller = SetUp();
@@ -178,7 +211,7 @@ namespace API.Tests
             var dishId = Guid.NewGuid();
 
             // Act
-            var result = controller.RemoveOneFromCart(username, dishId);
+            var result = await controller.RemoveOneFromCartAsync(username, dishId);
 
             // Assert
             var notFoundResult = Assert.IsType<NotFoundObjectResult>(result.Result);
@@ -186,19 +219,19 @@ namespace API.Tests
         }
 
         [Fact]
-        public void RemoveAllFromCart_ItemInCart_ShouldRemoveItemCompletely()
+        public async void RemoveAllFromCart_ItemInCart_ShouldRemoveItemCompletely()
         {
             // Arrange
             var controller = SetUp();
 
-            string username = "TestUser1"; 
+            string username = "TestUser1";
             var dishId = Guid.NewGuid();
             var dish = new Dish { Id = dishId, Name = "Dish1", Price = 1 };
-            controller.AddOneToCart(username, dish);
-            controller.AddOneToCart(username, dish);
+            await controller.AddOneToCartAsync(username, dish);
+            await controller.AddOneToCartAsync(username, dish);
 
             // Act
-            var result = controller.RemoveAllFromCart(username, dishId);
+            var result = await controller.RemoveAllFromCartAsync(username, dishId);
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result.Result);
@@ -207,7 +240,7 @@ namespace API.Tests
         }
 
         [Fact]
-        public void RemoveAllFromCart_ItemNotInCart_ShouldReturnNotFound()
+        public async void RemoveAllFromCart_ItemNotInCart_ShouldReturnNotFound()
         {
             // Arrange
             var controller = SetUp();
@@ -216,7 +249,7 @@ namespace API.Tests
             var dishId = Guid.NewGuid();
 
             // Act
-            var result = controller.RemoveAllFromCart(username, dishId);
+            var result = await controller.RemoveAllFromCartAsync(username, dishId);
 
             // Assert
             var notFoundResult = Assert.IsType<NotFoundObjectResult>(result.Result);
@@ -228,6 +261,8 @@ namespace API.Tests
         {
             // Arrange
             var loggerMock = new Mock<ILogger<CartController>>();
+
+            // Kafka Mock
             var kafkaProducerMock = new Mock<IKafkaProducer>();
             var kafkaService = new KafkaProducerService(kafkaProducerMock.Object);
 
@@ -236,7 +271,27 @@ namespace API.Tests
                     It.IsAny<string>(), It.IsAny<string>(), It.IsAny<ShoppingCart>()))
                 .Returns(Task.CompletedTask);
 
-            var cartService = new CartService(kafkaService);
+            // Repository Mock
+            var cartDataStore = new Dictionary<string, ShoppingCart>();
+            var cartRepositoryMock = new Mock<ICartRepository>();
+
+            cartRepositoryMock
+                .Setup(repo => repo.GetCartAsync(It.IsAny<string>()))
+                .ReturnsAsync((string username) =>
+                {
+                    cartDataStore.TryGetValue(username, out var cart);
+                    return cart;
+                });
+
+            cartRepositoryMock
+                .Setup(repo => repo.SaveCartAsync(It.IsAny<ShoppingCart>()))
+                .Callback((ShoppingCart cart) =>
+                {
+                    cartDataStore[cart.Username] = cart;
+                })
+                .Returns(Task.CompletedTask);
+
+            var cartService = new CartService(cartRepositoryMock.Object);
             var controller = new CartController(
                     loggerMock.Object,
                     kafkaService,
@@ -244,10 +299,10 @@ namespace API.Tests
 
             string username = "TestUser1";
             var dish = new Dish { Id = Guid.NewGuid(), Name = "Dish1", Price = 1 };
-            var cart = cartService.AddOneToCart(username, dish);
+            var cart = await cartService.AddOneToCartAsync(username, dish);
 
             // Act
-            var result = await controller.Order(username);
+            var result = await controller.OrderAsync(username);
 
             // Assert
             kafkaProducerMock.Verify(p => p.ProduceAsync<ShoppingCart>(
@@ -268,7 +323,7 @@ namespace API.Tests
             var username = "nonexistentUser";
 
             // Act
-            var result = await controller.Order(username);
+            var result = await controller.OrderAsync(username);
 
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);

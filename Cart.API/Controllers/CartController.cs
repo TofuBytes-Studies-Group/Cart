@@ -23,18 +23,18 @@ namespace Cart.API.Controllers
         }
 
         [HttpGet("{username}")]
-        public ActionResult<ShoppingCart> GetCart(string username)
+        public async Task<ActionResult<ShoppingCart>> GetCartAsync(string username)
         {
             _logger.LogInformation("Fetching cart for user: {Username}", username);
 
-            var cart = _cartService.GetCart(username);
+            var cart = await _cartService.GetCartAsync(username);
             _logger.LogInformation("Cart fetched successfully for user: {Username}", username);
 
             return Ok(cart);
         }
 
         [HttpPost("{username}/add-one")]
-        public ActionResult<ShoppingCart> AddOneToCart(string username, [FromBody] Dish dish)
+        public async Task<ActionResult<ShoppingCart>> AddOneToCartAsync(string username, [FromBody] Dish dish)
         {
             if (dish == null)
             {
@@ -43,19 +43,19 @@ namespace Cart.API.Controllers
             }
 
             _logger.LogInformation("Adding dish to cart for user: {Username}, Dish: {DishName}", username, dish.Name);
-            var cart = _cartService.AddOneToCart(username, dish);
+            var cart = await _cartService.AddOneToCartAsync(username, dish);
             _logger.LogInformation("Dish added to cart successfully for user: {Username}, Dish: {DishName}", username, dish.Name);
 
             return Ok(cart);
         }
 
         [HttpDelete("{username}/remove-one/{dishId}")]
-        public ActionResult<ShoppingCart> RemoveOneFromCart(string username, Guid dishId)
+        public async Task<ActionResult<ShoppingCart>> RemoveOneFromCartAsync(string username, Guid dishId)
         {
             try
             {
                 _logger.LogInformation("Removing one instance of dish from cart for user: {Username}, DishId: {DishId}", username, dishId);
-                var cart = _cartService.RemoveOneFromCart(username, dishId);
+                var cart = await _cartService.RemoveOneFromCartAsync(username, dishId);
                 _logger.LogInformation("Dish removed successfully from cart for user: {Username}, DishId: {DishId}", username, dishId);
 
                 return Ok(cart);
@@ -68,12 +68,12 @@ namespace Cart.API.Controllers
         }
 
         [HttpDelete("{username}/remove-all/{dishId}")]
-        public ActionResult<ShoppingCart> RemoveAllFromCart(string username, Guid dishId)
+        public async Task<ActionResult<ShoppingCart>> RemoveAllFromCartAsync(string username, Guid dishId)
         {
             try
             {
                 _logger.LogInformation("Removing all instances of dish from cart for user: {Username}, DishId: {DishId}", username, dishId);
-                var cart = _cartService.RemoveAllFromCart(username, dishId);
+                var cart = await _cartService.RemoveAllFromCartAsync(username, dishId);
                 _logger.LogInformation("All instances of dish removed successfully from cart for user: {Username}, DishId: {DishId}", username, dishId);
 
                 return Ok(cart);
@@ -86,12 +86,12 @@ namespace Cart.API.Controllers
         }
 
         [HttpPost("{username}/order")]
-        public async Task<ActionResult> Order(string username)
+        public async Task<ActionResult> OrderAsync(string username)
         {
             try
             {
                 _logger.LogInformation("Processing order for user: {Username}", username);
-                var cart = _cartService.GetCart(username);
+                var cart = await _cartService.GetCartAsync(username);
                 if (!cart.CartItems.Any())
                 {
                     _logger.LogWarning("Order failed: Cart is empty for user: {Username}", username);

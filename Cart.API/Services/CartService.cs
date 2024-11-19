@@ -6,50 +6,45 @@ namespace Cart.API.Services
 {
     public class CartService
     {
+        private readonly ICartRepository _cartRepository;
 
-        // Temporary untill redis:
-        private readonly Dictionary<string, ShoppingCart> _carts = new Dictionary<string, ShoppingCart>();
-        private readonly KafkaProducerService _kafkaProducerService;
-        //private readonly ICartRepository _cartRepository; //TODO Add this
-
-        public CartService(KafkaProducerService kafkaProducerService)
+        public CartService(ICartRepository cartRepository)
         {
-            _kafkaProducerService = kafkaProducerService;
+            _cartRepository = cartRepository;
         }
 
-        // Will always return a cart, just an empty one for a new username
-        public ShoppingCart GetCart(string username)
+        public async Task<ShoppingCart> GetCartAsync(string username)
         {
-            if (!_carts.TryGetValue(username, out var cart))
+            var cart = await _cartRepository.GetCartAsync(username);
+            if (cart == null)
             {
-                cart = new ShoppingCart { Username = username }; // Temporary will add db later 
-                _carts[username] = cart;
-                return cart;
+                cart = new ShoppingCart { Username = username };
+                await _cartRepository.SaveCartAsync(cart); 
             }
             return cart;
         }
 
-        public ShoppingCart AddOneToCart(string username, Dish dish)
+        public async Task<ShoppingCart> AddOneToCartAsync(string username, Dish dish)
         {
-            var cart = GetCart(username);
+            var cart = await GetCartAsync(username);
             cart.AddOneToCart(dish);
-            _carts[username] = cart;
+            await _cartRepository.SaveCartAsync(cart);
             return cart;
         }
 
-        public ShoppingCart RemoveOneFromCart(string username, Guid dishId)
+        public async Task<ShoppingCart> RemoveOneFromCartAsync(string username, Guid dishId)
         {
-            var cart = GetCart(username);
+            var cart = await GetCartAsync(username);
             cart.RemoveOneFromCart(dishId);
-            _carts[username] = cart;
+            await _cartRepository.SaveCartAsync(cart);
             return cart;
         }
 
-        public ShoppingCart RemoveAllFromCart(string username, Guid dishId)
+        public async Task<ShoppingCart> RemoveAllFromCartAsync(string username, Guid dishId)
         {
-            var cart = GetCart(username);
+            var cart = await GetCartAsync(username);
             cart.RemoveAllFromCart(dishId);
-            _carts[username] = cart;
+            await _cartRepository.SaveCartAsync(cart);
             return cart;
         }
     }

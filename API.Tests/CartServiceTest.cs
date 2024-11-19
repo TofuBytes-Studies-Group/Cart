@@ -1,7 +1,8 @@
 ﻿using Cart.API.Services;
+using Cart.Domain.Aggregates;
 using Cart.Domain.Entities;
 using Cart.Domain.Exceptions;
-using Cart.Infrastructure.Kafka;
+using Cart.Infrastructure.Repositories;
 using Moq;
 
 namespace API.Tests
@@ -11,14 +12,38 @@ namespace API.Tests
         internal CartService SetUp()
         {
             // Arrange 
-            var kafkaProducerMock = new Mock<IKafkaProducer>();
-            var kafkaService = new KafkaProducerService(kafkaProducerMock.Object);
-            var service = new CartService(kafkaService);
-            return service;
+            var cartDataStore = new Dictionary<string, ShoppingCart>();
+            var cartRepositoryMock = new Mock<ICartRepository>();
+
+            cartRepositoryMock
+                .Setup(repo => repo.GetCartAsync(It.IsAny<string>()))
+                .ReturnsAsync((string username) =>
+                {
+                    cartDataStore.TryGetValue(username, out var cart);
+                    return cart;
+                });
+
+            cartRepositoryMock
+                .Setup(repo => repo.SaveCartAsync(It.IsAny<ShoppingCart>()))
+                .Callback((ShoppingCart cart) =>
+                {
+                    cartDataStore[cart.Username] = cart;
+                })
+                .Returns(Task.CompletedTask);
+
+            cartRepositoryMock
+                .Setup(repo => repo.DeleteCartAsync(It.IsAny<string>()))
+                .Callback((string username) =>
+                {
+                    cartDataStore.Remove(username);
+                })
+                .Returns(Task.CompletedTask);
+
+            return new CartService(cartRepositoryMock.Object);
         }
 
         [Fact]
-        public void GetCart_UserHasNoCart_ShouldReturnEmptyCart()
+        public async void GetCartAsync_UserHasNoCart_ShouldReturnEmptyCart()
         {
             // Arrange 
             var service = SetUp();
@@ -26,7 +51,7 @@ namespace API.Tests
             var username = "nonexistentUser";
 
             // Act 
-            var cart = service.GetCart(username);
+            var cart = await service.GetCartAsync(username);
 
             // Assert
             Assert.NotNull(cart);
@@ -36,17 +61,17 @@ namespace API.Tests
         }
 
         [Fact]
-        public void GetCart_UserAlreadyHasCart_ShouldReturnUsersCart()
+        public async void GetCartAsync_UserAlreadyHasCart_ShouldReturnUsersCart()
         {
             // Arrange
             var service = SetUp();
 
             string username = "TestUser1";
             var dish = new Dish { Id = Guid.NewGuid(), Name = "Dish1", Price = 1 };
-            service.AddOneToCart(username, dish);
+            await service.AddOneToCartAsync(username, dish);
 
             // Act
-            var cart = service.GetCart(username);
+            var cart = await service.GetCartAsync(username);
 
             // Assert
             Assert.NotNull(cart);
@@ -56,7 +81,7 @@ namespace API.Tests
         }
 
         [Fact]
-        public void AddOneToCart_ItemNotInCart_ShouldAddItemToCart()
+        public async void AddOneToCartAsync_ItemNotInCart_ShouldAddItemToCart()
         {
             // Arrange
             var service = SetUp();
@@ -65,7 +90,7 @@ namespace API.Tests
             var dish = new Dish { Id = Guid.NewGuid(), Name = "Dish1", Price = 1 };
 
             // Act
-            var cart = service.AddOneToCart(username, dish);
+            var cart = await service.AddOneToCartAsync(username, dish);
 
             // Assert
             Assert.NotNull(cart);
@@ -75,17 +100,17 @@ namespace API.Tests
         }
 
         [Fact]
-        public void AddOneToCart_ItemAlreadyInCart_ShouldAddOneToQuantity()
+        public async void AddOneToCartAsync_ItemAlreadyInCart_ShouldAddOneToQuantity()
         {
             // Arrange
             var service = SetUp();
 
             string username = "TestUser1";
             var dish = new Dish { Id = Guid.NewGuid(), Name = "Dish1", Price = 1 };
-            service.AddOneToCart(username, dish);
+            await service.AddOneToCartAsync(username, dish);
 
             // Act
-            var cart = service.AddOneToCart(username, dish);
+            var cart = await service.AddOneToCartAsync(username, dish);
 
             // Assert
             Assert.NotNull(cart);
@@ -94,29 +119,7 @@ namespace API.Tests
         }
 
         [Fact]
-        public void RemoveOneFromCart_ItemAlreadyInCart_ShouldDecreaseQuantityByOne()
-        {
-            // Arrange
-            var service = SetUp();
-
-            string username = "TestUser1"; 
-            var dishId = Guid.NewGuid();
-            var dish = new Dish { Id = dishId, Name = "Dish1", Price = 1 };
-            service.AddOneToCart(username, dish);
-            service.AddOneToCart(username, dish);
-
-            // Act
-            var cart = service.RemoveOneFromCart(username, dishId);
-
-            // Assert
-            Assert.NotNull(cart);
-            Assert.Single(cart.CartItems); 
-            Assert.Equal(1, cart.CartItems.Sum(item => item.Quantity));
-            Assert.Equal(1, cart.TotalPrice);
-        }
-
-        [Fact]
-        public void RemoveOneFromCart_OnlyOneItemInCart_ShouldRemoveItemCompletely()
+        public async void RemoveOneFromCartAsync_ItemAlreadyInCart_ShouldDecreaseQuantityByOne()
         {
             // Arrange
             var service = SetUp();
@@ -124,10 +127,32 @@ namespace API.Tests
             string username = "TestUser1";
             var dishId = Guid.NewGuid();
             var dish = new Dish { Id = dishId, Name = "Dish1", Price = 1 };
-            service.AddOneToCart(username, dish);
+            await service.AddOneToCartAsync(username, dish);
+            await service.AddOneToCartAsync(username, dish);
 
             // Act
-            var cart = service.RemoveOneFromCart(username, dishId);
+            var cart = await service.RemoveOneFromCartAsync(username, dishId);
+
+            // Assert
+            Assert.NotNull(cart);
+            Assert.Single(cart.CartItems);
+            Assert.Equal(1, cart.CartItems.Sum(item => item.Quantity));
+            Assert.Equal(1, cart.TotalPrice);
+        }
+
+        [Fact]
+        public async void RemoveOneFromCartAsync_OnlyOneItemInCart_ShouldRemoveItemCompletely()
+        {
+            // Arrange
+            var service = SetUp();
+
+            string username = "TestUser1";
+            var dishId = Guid.NewGuid();
+            var dish = new Dish { Id = dishId, Name = "Dish1", Price = 1 };
+            await service.AddOneToCartAsync(username, dish);
+
+            // Act
+            var cart = await service.RemoveOneFromCartAsync(username, dishId);
 
             // Assert
             Assert.NotNull(cart);
@@ -136,7 +161,7 @@ namespace API.Tests
         }
 
         [Fact]
-        public void RemoveOneFromCart_ItemNotInCart_ShouldThrowItemNotInCartException()
+        public async void RemoveOneFromCartAsync_ItemNotInCart_ShouldThrowItemNotInCartException()
         {
             // Arrange
             var service = SetUp();
@@ -145,12 +170,13 @@ namespace API.Tests
             var dishId = Guid.NewGuid();
 
             // Act & Assert
-            var exception = Assert.Throws<ItemNotInCartException>(() => service.RemoveOneFromCart(username, dishId));
+            var exception = await Assert.ThrowsAsync<ItemNotInCartException>(
+                async () => await service.RemoveOneFromCartAsync(username, dishId));
             Assert.Equal("Item not found in cart", exception.Message);
         }
 
         [Fact]
-        public void RemoveAllFromCart_ItemInCart_ShouldRemoveItemCompletely()
+        public async void RemoveAllFromCartAsync_ItemInCart_ShouldRemoveItemCompletely()
         {
             // Arrange
             var service = SetUp();
@@ -158,11 +184,11 @@ namespace API.Tests
             string username = "TestUser1";
             var dishId = Guid.NewGuid();
             var dish = new Dish { Id = dishId, Name = "Dish1", Price = 1 };
-            service.AddOneToCart(username, dish);
-            service.AddOneToCart(username, dish);
+            await service.AddOneToCartAsync(username, dish);
+            await service.AddOneToCartAsync(username, dish);
 
             // Act
-            var cart = service.RemoveAllFromCart(username, dishId);
+            var cart = await service.RemoveAllFromCartAsync(username, dishId);
 
             // Assert
             Assert.NotNull(cart);
@@ -170,7 +196,7 @@ namespace API.Tests
         }
 
         [Fact]
-        public void RemoveAllFromCart_ItemNotInCart_ShouldThrowItemNotInCartException()
+        public async void RemoveAllFromCartAsync_ItemNotInCart_ShouldThrowItemNotInCartException()
         {
             // Arrange
             var service = SetUp();
@@ -179,7 +205,8 @@ namespace API.Tests
             var dishId = Guid.NewGuid();
 
             // Act & Assert
-            var exception = Assert.Throws<ItemNotInCartException>(() => service.RemoveAllFromCart(username, dishId));
+            var exception = await Assert.ThrowsAsync<ItemNotInCartException>(
+                async () => await service.RemoveAllFromCartAsync(username, dishId));
             Assert.Equal("Item not found in cart", exception.Message);
         }
     }

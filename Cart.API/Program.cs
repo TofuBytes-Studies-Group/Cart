@@ -2,6 +2,8 @@ using Card.API.Kafka;
 using Card.Infrastructure.Kafka;
 using Cart.API.Services;
 using Cart.Infrastructure.Kafka;
+using Cart.Infrastructure.Repositories;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,12 +21,9 @@ builder.Services.AddHostedService<KafkaConsumer>();
 builder.Services.AddSingleton<KafkaProducerService>();
 builder.Services.AddSingleton<CartService>();
 
-// Dependency injection for Redis
-builder.Services.AddStackExchangeRedisCache(options =>
-{
-    options.Configuration = builder.Configuration.GetConnectionString("RedisConnection");
-    options.InstanceName = "MTOGOCart_";
-});
+// Add redis
+builder.Services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect("localhost:6379"));
+builder.Services.AddSingleton<ICartRepository, RedisCartRepository>();
 
 var app = builder.Build();
 
