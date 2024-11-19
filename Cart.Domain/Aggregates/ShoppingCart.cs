@@ -17,7 +17,7 @@ namespace Cart.Domain.Aggregates
 
         public void AddOneToCart(Dish dish)
         {
-            var existingCartItem = CartItems.FirstOrDefault(cartItem => cartItem.Dish.Id == dish.Id);
+            var existingCartItem = CartItems.SingleOrDefault(cartItem => cartItem.Dish.Id == dish.Id);
             if (existingCartItem != null)
             {
                 existingCartItem.Quantity += 1;
@@ -30,7 +30,7 @@ namespace Cart.Domain.Aggregates
 
         public void RemoveOneFromCart(Guid dishId)
         {
-            var item = CartItems.FirstOrDefault(cartItem => cartItem.Dish.Id == dishId);
+            var item = CartItems.SingleOrDefault(cartItem => cartItem.Dish.Id == dishId);
             if (item != null)
             {
                 item.Quantity -= 1;
@@ -47,7 +47,7 @@ namespace Cart.Domain.Aggregates
 
         public void RemoveAllFromCart(Guid dishId)
         {
-            var item = CartItems.FirstOrDefault(cartItem => cartItem.Dish.Id == dishId);
+            var item = CartItems.SingleOrDefault(cartItem => cartItem.Dish.Id == dishId);
             if (item != null)
             {
                 CartItems.Remove(item);
