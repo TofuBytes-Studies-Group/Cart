@@ -298,7 +298,8 @@ namespace API.Tests
                     cartService);
 
             string username = "TestUser1";
-            var dish = new Dish { Id = Guid.NewGuid(), Name = "Dish1", Price = 1 };
+            var dishId = Guid.NewGuid();
+            var dish = new Dish { Id = dishId, Name = "Dish1", Price = 1 };
             var cart = await cartService.AddOneToCartAsync(username, dish);
 
             // Act
@@ -306,7 +307,8 @@ namespace API.Tests
 
             // Assert
             kafkaProducerMock.Verify(p => p.ProduceAsync<ShoppingCart>(
-                "topic", "Key", It.Is<ShoppingCart>(c => c.Username == username && c.CartItems.Count == 1)),
+                "topic", "Key", It.Is<ShoppingCart>(
+                    c => c.Username == username && c.CartItems.Count == 1 && c.CartItems[0].Dish.Id == dishId)),
                 Times.Once);
 
             kafkaProducerMock.VerifyNoOtherCalls();
