@@ -1,6 +1,9 @@
-using MTOGO.API.Kafka;
-using MTOGO.API.Services;
-using MTOGO.Infrastructure.Kafka;
+using Card.API.Kafka;
+using Card.Infrastructure.Kafka;
+using Cart.API.Services;
+using Cart.Infrastructure.Kafka;
+using Cart.Infrastructure.Repositories;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,10 +15,15 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // Add the producer service as singletons:
-builder.Services.AddSingleton<KafkaProducer>();
+builder.Services.AddSingleton<IKafkaProducer, KafkaProducer>();
 // Add the kafka consumer service as a hosted service (background service that runs for the lifetime of the application):
 builder.Services.AddHostedService<KafkaConsumer>();
-builder.Services.AddSingleton<TestService>();
+builder.Services.AddSingleton<KafkaProducerService>();
+builder.Services.AddSingleton<CartService>();
+
+// Add redis
+builder.Services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect("localhost:6379"));
+builder.Services.AddSingleton<ICartRepository, RedisCartRepository>();
 
 var app = builder.Build();
 
