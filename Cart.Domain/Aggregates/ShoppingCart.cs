@@ -5,7 +5,9 @@ namespace Cart.Domain.Aggregates
 {
     public class ShoppingCart
     {
-        public required string Username { get; set; }
+        public Guid CustomerId { get; set; }
+        public Guid RestaurantId { get; set; }
+        public required string CustomerUsername { get; set; }
         public List<ShoppingCartItem> CartItems { get; set; } = new List<ShoppingCartItem>();
         public int TotalPrice
         {

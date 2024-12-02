@@ -16,9 +16,11 @@ builder.Services.AddSwaggerGen();
 
 // Add the producer service as singletons:
 builder.Services.AddSingleton<IKafkaProducer, KafkaProducer>();
+
+builder.Services.AddSingleton<IKafkaConsumerService, KafkaConsumerService>();
 // Add the kafka consumer service as a hosted service (background service that runs for the lifetime of the application):
 builder.Services.AddHostedService<KafkaConsumer>();
-builder.Services.AddSingleton<KafkaProducerService>();
+builder.Services.AddSingleton<IKafkaProducerService, KafkaProducerService>();
 builder.Services.AddSingleton<CartService>();
 
 // Add redis

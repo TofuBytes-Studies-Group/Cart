@@ -27,7 +27,7 @@ namespace API.Tests
                 .Setup(repo => repo.SaveCartAsync(It.IsAny<ShoppingCart>()))
                 .Callback((ShoppingCart cart) =>
                 {
-                    cartDataStore[cart.Username] = cart;
+                    cartDataStore[cart.CustomerUsername] = cart;
                 })
                 .Returns(Task.CompletedTask);
 
@@ -55,7 +55,7 @@ namespace API.Tests
 
             // Assert
             Assert.NotNull(cart);
-            Assert.Equal(username, cart.Username);
+            Assert.Equal(username, cart.CustomerUsername);
             Assert.Empty(cart.CartItems);
             Assert.Equal(0, cart.TotalPrice);
         }
@@ -75,7 +75,7 @@ namespace API.Tests
 
             // Assert
             Assert.NotNull(cart);
-            Assert.Equal(username, cart.Username);
+            Assert.Equal(username, cart.CustomerUsername);
             Assert.Single(cart.CartItems);
             Assert.Equal(1, cart.TotalPrice);
         }
@@ -94,7 +94,7 @@ namespace API.Tests
 
             // Assert
             Assert.NotNull(cart);
-            Assert.Equal(username, cart.Username);
+            Assert.Equal(username, cart.CustomerUsername);
             Assert.Single(cart.CartItems);
             Assert.Equal(1, cart.TotalPrice);
         }

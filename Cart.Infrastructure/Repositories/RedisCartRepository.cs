@@ -31,7 +31,7 @@ namespace Cart.Infrastructure.Repositories
         public async Task SaveCartAsync(ShoppingCart cart)
         {
             var jsonCart = JsonSerializer.Serialize(cart);
-            await _database.StringSetAsync(cart.Username, jsonCart, expiration);
+            await _database.StringSetAsync(cart.CustomerUsername, jsonCart, expiration);
         }
 
         public async Task DeleteCartAsync(string username)

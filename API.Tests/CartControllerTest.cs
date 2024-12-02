@@ -38,7 +38,7 @@ namespace API.Tests
                 .Setup(repo => repo.SaveCartAsync(It.IsAny<ShoppingCart>()))
                 .Callback((ShoppingCart cart) =>
                 {
-                    cartDataStore[cart.Username] = cart;
+                    cartDataStore[cart.CustomerUsername] = cart;
                 })
                 .Returns(Task.CompletedTask);
 
@@ -75,7 +75,7 @@ namespace API.Tests
             var okResult = Assert.IsType<OkObjectResult>(result.Result);
             var cart = Assert.IsType<ShoppingCart>(okResult.Value);
             Assert.NotNull(cart);
-            Assert.Equal(username, cart.Username);
+            Assert.Equal(username, cart.CustomerUsername);
             Assert.Empty(cart.CartItems);
             Assert.Equal(0, cart.TotalPrice);
         }
@@ -96,7 +96,7 @@ namespace API.Tests
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result.Result);
             var cart = Assert.IsType<ShoppingCart>(okResult.Value);
-            Assert.Equal(username, cart.Username);
+            Assert.Equal(username, cart.CustomerUsername);
             Assert.Single(cart.CartItems);
             Assert.Equal(1, cart.TotalPrice);
         }
@@ -116,7 +116,7 @@ namespace API.Tests
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result.Result);
             var cart = Assert.IsType<ShoppingCart>(okResult.Value);
-            Assert.Equal(username, cart.Username);
+            Assert.Equal(username, cart.CustomerUsername);
             Assert.Single(cart.CartItems);
             Assert.Equal(1, cart.TotalPrice);
         }
@@ -287,7 +287,7 @@ namespace API.Tests
                 .Setup(repo => repo.SaveCartAsync(It.IsAny<ShoppingCart>()))
                 .Callback((ShoppingCart cart) =>
                 {
-                    cartDataStore[cart.Username] = cart;
+                    cartDataStore[cart.CustomerUsername] = cart;
                 })
                 .Returns(Task.CompletedTask);
 
@@ -307,8 +307,8 @@ namespace API.Tests
 
             // Assert
             kafkaProducerMock.Verify(p => p.ProduceAsync<ShoppingCart>(
-                "topic", "Key", It.Is<ShoppingCart>(
-                    c => c.Username == username && c.CartItems.Count == 1 && c.CartItems[0].Dish.Id == dishId)),
+                "create.order", username, It.Is<ShoppingCart>(
+                    c => c.CustomerUsername == username && c.CartItems.Count == 1 && c.CartItems[0].Dish.Id == dishId)),
                 Times.Once);
 
             kafkaProducerMock.VerifyNoOtherCalls();

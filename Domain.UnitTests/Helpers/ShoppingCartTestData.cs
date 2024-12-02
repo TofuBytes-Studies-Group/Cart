@@ -11,7 +11,7 @@ namespace Domain.UnitTests.Helpers
             {
             new ShoppingCart
             {
-                Username = "TestUser1",
+                CustomerUsername = "TestUser1",
                 CartItems = new List<ShoppingCartItem>
                 {
                     new ShoppingCartItem
@@ -34,7 +34,7 @@ namespace Domain.UnitTests.Helpers
             {
             new ShoppingCart
             {
-                Username = "TestUser2",
+                CustomerUsername = "TestUser2",
                 CartItems = new List<ShoppingCartItem>
                 {
                     new ShoppingCartItem
