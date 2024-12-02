@@ -14,7 +14,7 @@ namespace API.Tests
             var kafkaProducerMock = new Mock<IKafkaProducer>();
             var service = new KafkaProducerService(kafkaProducerMock.Object);
 
-            var cart = new ShoppingCart { Username = "TestUser1" };
+            var cart = new ShoppingCart { CustomerUsername = "TestUser1" };
 
             kafkaProducerMock
                 .Setup(p => p.ProduceAsync<ShoppingCart>(
@@ -25,7 +25,7 @@ namespace API.Tests
             await service.Produce(cart);
 
             // Assert
-            kafkaProducerMock.Verify(p => p.ProduceAsync<ShoppingCart>("topic", "Key", cart),
+            kafkaProducerMock.Verify(p => p.ProduceAsync<ShoppingCart>("create.order", "TestUser1", cart),
                 Times.Once);
 
             kafkaProducerMock.VerifyNoOtherCalls();

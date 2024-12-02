@@ -3,7 +3,7 @@ using Cart.Infrastructure.Kafka;
 
 namespace Cart.API.Services
 {
-    public class KafkaProducerService  
+    public class KafkaProducerService : IKafkaProducerService
     {
         private readonly IKafkaProducer _kafkaProducer;
         public KafkaProducerService(IKafkaProducer kafkaProducer)
@@ -13,7 +13,7 @@ namespace Cart.API.Services
 
         public async Task Produce(ShoppingCart cart)
         {
-            await _kafkaProducer.ProduceAsync<ShoppingCart>("topic", "Key", cart);
+            await _kafkaProducer.ProduceAsync<ShoppingCart>("create.order", cart.CustomerUsername, cart);
         }
     }
 }

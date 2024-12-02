@@ -27,7 +27,7 @@ namespace Domain.UnitTests
         public void AddToCart_AddToEmptyCart_ShouldAddCartItemsAndTotalPriceShouldEqualPrice(int price, int expectedTotalPrice)
         {
             // Arrange
-            var cart = new ShoppingCart { Username = "TestUser1" };
+            var cart = new ShoppingCart { CustomerUsername = "TestUser1" };
             var dish = new Dish { Id = new Guid(), Name = "Dish1", Price = price };
 
             // Act
@@ -53,7 +53,7 @@ namespace Domain.UnitTests
             // Arrange
             var cart = new ShoppingCart 
             {
-                Username = "TestUser1",
+                CustomerUsername = "TestUser1",
                 CartItems = new List<ShoppingCartItem>
                 {
                     new ShoppingCartItem
@@ -90,7 +90,7 @@ namespace Domain.UnitTests
 
             var cart = new ShoppingCart
             {
-                Username = "TestUser1",
+                CustomerUsername = "TestUser1",
                 CartItems = new List<ShoppingCartItem>
                 {
                     new ShoppingCartItem
@@ -122,7 +122,7 @@ namespace Domain.UnitTests
             var dish = new Dish { Id = dishId, Name = "Dish1", Price = 1 };
             var cart = new ShoppingCart
             {
-                Username = "Testuser1",
+                CustomerUsername = "Testuser1",
                 CartItems = new List<ShoppingCartItem>
                 {
                     new ShoppingCartItem
@@ -144,7 +144,7 @@ namespace Domain.UnitTests
         public void RemoveAllFromCart_ItemNotInCart_ShouldThrowItemNotInCartException()
         {
             // Arrange 
-            var cart = new ShoppingCart { Username = "Testuser1" };
+            var cart = new ShoppingCart { CustomerUsername = "Testuser1" };
 
             // Act & Assert
             var exception = Assert.Throws<ItemNotInCartException>(() => cart.RemoveAllFromCart(Guid.NewGuid()));
@@ -159,7 +159,7 @@ namespace Domain.UnitTests
             var dish = new Dish { Id = dishId, Name = "Dish1", Price = 1 };
             var cart = new ShoppingCart
             {
-                Username = "Testuser1",
+                CustomerUsername = "Testuser1",
                 CartItems = new List<ShoppingCartItem> 
                 {
                     new ShoppingCartItem
@@ -196,7 +196,7 @@ namespace Domain.UnitTests
             var dish = new Dish { Id = dishId, Name = "Dish1", Price = 1 };
             var cart = new ShoppingCart
             {
-                Username = "Testuser1",
+                CustomerUsername = "Testuser1",
                 CartItems = new List<ShoppingCartItem>
                 {
                     new ShoppingCartItem
@@ -221,7 +221,7 @@ namespace Domain.UnitTests
             var dish = new Dish { Id = dishId, Name = "Dish1", Price = 1 };
             var cart = new ShoppingCart
             {
-                Username = "Testuser1",
+                CustomerUsername = "Testuser1",
                 CartItems = new List<ShoppingCartItem>
                 {
                     new ShoppingCartItem
@@ -247,7 +247,7 @@ namespace Domain.UnitTests
             var dish = new Dish { Id = dishId, Name = "Dish1", Price = 1 };
             var cart = new ShoppingCart
             {
-                Username = "Testuser1",
+                CustomerUsername = "Testuser1",
                 CartItems = new List<ShoppingCartItem>
                 {
                     new ShoppingCartItem
@@ -276,7 +276,7 @@ namespace Domain.UnitTests
         public void RemoveOneFromCart_ItemNotInCart_ShouldThrowItemNotInCartThrowException()
         {
             //Arrange
-            var cart = new ShoppingCart { Username = "TestUser1" }; 
+            var cart = new ShoppingCart { CustomerUsername = "TestUser1" }; 
 
             // Act & Assert
             var exception = Assert.Throws<ItemNotInCartException>(() => cart.RemoveOneFromCart(Guid.NewGuid()));

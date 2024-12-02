@@ -18,7 +18,7 @@ namespace Cart.API.Services
             var cart = await _cartRepository.GetCartAsync(username);
             if (cart == null)
             {
-                cart = new ShoppingCart { Username = username };
+                cart = new ShoppingCart { CustomerUsername = username };
                 await _cartRepository.SaveCartAsync(cart); 
             }
             return cart;
