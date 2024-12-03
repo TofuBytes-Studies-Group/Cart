@@ -24,7 +24,11 @@ builder.Services.AddSingleton<IKafkaProducerService, KafkaProducerService>();
 builder.Services.AddSingleton<CartService>();
 
 // Add redis
-builder.Services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect("localhost:6379"));
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+{
+    var configuration = builder.Configuration.GetConnectionString("RedisCache");
+    return ConnectionMultiplexer.Connect(configuration);
+});
 builder.Services.AddSingleton<ICartRepository, RedisCartRepository>();
 
 var app = builder.Build();

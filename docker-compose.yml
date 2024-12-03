@@ -1,8 +1,27 @@
 version: '3.9'
+
 services:
+  cart.api:
+    image: ${DOCKER_REGISTRY-}cartapi
+    build:
+      context: .
+      dockerfile: Cart.API/Dockerfile
+    networks:
+      - kafka-network
+
+  cart.redis:
+    image: redis:latest
+    restart: always
+    networks:
+      - kafka-network
+    ports:
+      - "6379:6379"
+    volumes:
+      - /path/to/local/data:/root/redis
+
   zookeeper:
     image: confluentinc/cp-zookeeper:6.1.1
-    container_name: zookeeper1
+    container_name: cart-zookeeper
     ports:
       - "2181:2181"
     environment:
@@ -12,7 +31,7 @@ services:
 
   kafka:
     image: confluentinc/cp-kafka:6.1.1
-    container_name: kafka1
+    container_name: cart-kafka
     depends_on:
       - zookeeper
     ports:
@@ -20,18 +39,13 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL: PLAINTEXT
+      KAFKA_LISTENER_PORT: 9092
+      KAFKA_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     networks:
       - kafka-network
-    
-  redis:
-      image: redis:latest
-      restart: always
-      ports:
-      - "6379:6379"
-      volumes:
-      - /path/to/local/dаta:/root/redis
 
 networks:
   kafka-network:
