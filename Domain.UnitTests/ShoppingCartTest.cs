@@ -27,7 +27,7 @@ namespace Domain.UnitTests
         public void AddToCart_AddToEmptyCart_ShouldAddCartItemsAndTotalPriceShouldEqualPrice(int price, int expectedTotalPrice)
         {
             // Arrange
-            var cart = new ShoppingCart { CustomerUsername = "TestUser1" };
+            var cart = new ShoppingCart(Guid.NewGuid(), Guid.NewGuid(), "TestUser1");
             var dish = new Dish { Id = new Guid(), Name = "Dish1", Price = price };
 
             // Act
@@ -51,22 +51,17 @@ namespace Domain.UnitTests
             int expectedTotalPrice)
         {
             // Arrange
-            var cart = new ShoppingCart 
+            var dish = new Dish { Id = Guid.NewGuid(), Name = "Dish1", Price = priceOfDishInCart };
+            var cart = new ShoppingCart(Guid.NewGuid(), Guid.NewGuid(), "TestUser1");
+
+            for (int i = 0; i < quantityOfDishInCart; i++)
             {
-                CustomerUsername = "TestUser1",
-                CartItems = new List<ShoppingCartItem>
-                {
-                    new ShoppingCartItem
-                    {
-                        Dish = new Dish { Id = Guid.NewGuid(), Name = "Dish1", Price = priceOfDishInCart },
-                        Quantity = quantityOfDishInCart
-                    }
-                }
-            };
-            var dish = new Dish { Id = new Guid(), Name = "Dish2", Price = priceOfNewDish };
+                cart.AddOneToCart(dish);
+            }
+            var newDish = new Dish { Id = new Guid(), Name = "Dish2", Price = priceOfNewDish };
 
             // Act
-            cart.AddOneToCart(dish);
+            cart.AddOneToCart(newDish);
 
             // Assert
             Assert.Equal(quantityOfDishInCart + 1, cart.CartItems.Sum(item => item.Quantity));
@@ -87,19 +82,12 @@ namespace Domain.UnitTests
         {
             // Arrange
             var dish = new Dish { Id = Guid.NewGuid(), Name = "Dish1", Price = price };
+            var cart = new ShoppingCart(Guid.NewGuid(), Guid.NewGuid(), "TestUser1");
 
-            var cart = new ShoppingCart
+            for (int i = 0; i < quantityOfDishInCart; i++)
             {
-                CustomerUsername = "TestUser1",
-                CartItems = new List<ShoppingCartItem>
-                {
-                    new ShoppingCartItem
-                    {
-                        Dish = dish,
-                        Quantity = quantityOfDishInCart
-                    }
-                }
-            };
+                cart.AddOneToCart(dish);
+            }
 
             // Act
             cart.AddOneToCart(dish);
@@ -120,18 +108,12 @@ namespace Domain.UnitTests
             // Arrange  
             var dishId = Guid.NewGuid();
             var dish = new Dish { Id = dishId, Name = "Dish1", Price = 1 };
-            var cart = new ShoppingCart
+            var cart = new ShoppingCart(Guid.NewGuid(), Guid.NewGuid(), "TestUser1");
+
+            for (int i = 0; i < quantity; i++)
             {
-                CustomerUsername = "Testuser1",
-                CartItems = new List<ShoppingCartItem>
-                {
-                    new ShoppingCartItem
-                    {
-                        Dish = dish,
-                        Quantity = quantity
-                    }
-                }
-            };
+                cart.AddOneToCart(dish);
+            }
 
             // Act
             cart.RemoveAllFromCart(dishId);
@@ -144,7 +126,7 @@ namespace Domain.UnitTests
         public void RemoveAllFromCart_ItemNotInCart_ShouldThrowItemNotInCartException()
         {
             // Arrange 
-            var cart = new ShoppingCart { CustomerUsername = "Testuser1" };
+            var cart = new ShoppingCart(Guid.NewGuid(), Guid.NewGuid(), "TestUser1");
 
             // Act & Assert
             var exception = Assert.Throws<ItemNotInCartException>(() => cart.RemoveAllFromCart(Guid.NewGuid()));
@@ -156,24 +138,11 @@ namespace Domain.UnitTests
         {
             // Arrange 
             var dishId = Guid.NewGuid();
-            var dish = new Dish { Id = dishId, Name = "Dish1", Price = 1 };
-            var cart = new ShoppingCart
-            {
-                CustomerUsername = "Testuser1",
-                CartItems = new List<ShoppingCartItem> 
-                {
-                    new ShoppingCartItem
-                    {
-                        Dish = dish,
-                        Quantity = 1
-                    },
-                    new ShoppingCartItem
-                    {
-                        Dish = new Dish { Id = Guid.NewGuid(), Name = "Dish2", Price = 1 },
-                        Quantity = 1
-                    }
-                }
-            };
+            var dish1 = new Dish { Id = dishId, Name = "Dish1", Price = 1 };
+            var dish2 = new Dish { Id = Guid.NewGuid(), Name = "Dish2", Price = 1 };
+            var cart = new ShoppingCart(Guid.NewGuid(), Guid.NewGuid(), "TestUser1");
+            cart.AddOneToCart(dish1);
+            cart.AddOneToCart(dish2);
 
             // Act
             cart.RemoveAllFromCart(dishId);
@@ -194,18 +163,12 @@ namespace Domain.UnitTests
             // Arrange 
             var dishId = Guid.NewGuid();
             var dish = new Dish { Id = dishId, Name = "Dish1", Price = 1 };
-            var cart = new ShoppingCart
+            var cart = new ShoppingCart(Guid.NewGuid(), Guid.NewGuid(), "TestUser1");
+
+            for (int i = 0; i < quantityInCart; i++)
             {
-                CustomerUsername = "Testuser1",
-                CartItems = new List<ShoppingCartItem>
-                {
-                    new ShoppingCartItem
-                    {
-                        Dish = dish,
-                        Quantity = quantityInCart
-                    }
-                }
-            };
+                cart.AddOneToCart(dish);
+            }
 
             // Act
             cart.RemoveOneFromCart(dishId);
@@ -219,18 +182,8 @@ namespace Domain.UnitTests
         {
             var dishId = Guid.NewGuid();
             var dish = new Dish { Id = dishId, Name = "Dish1", Price = 1 };
-            var cart = new ShoppingCart
-            {
-                CustomerUsername = "Testuser1",
-                CartItems = new List<ShoppingCartItem>
-                {
-                    new ShoppingCartItem
-                    {
-                        Dish = dish,
-                        Quantity = 1
-                    }
-                }
-            };
+            var cart = new ShoppingCart(Guid.NewGuid(), Guid.NewGuid(), "TestUser1");
+            cart.AddOneToCart(dish);
 
             // Act
             cart.RemoveOneFromCart(dishId);
@@ -244,24 +197,11 @@ namespace Domain.UnitTests
         {
             // Arrange 
             var dishId = Guid.NewGuid();
-            var dish = new Dish { Id = dishId, Name = "Dish1", Price = 1 };
-            var cart = new ShoppingCart
-            {
-                CustomerUsername = "Testuser1",
-                CartItems = new List<ShoppingCartItem>
-                {
-                    new ShoppingCartItem
-                    {
-                        Dish = dish,
-                        Quantity = 1
-                    },
-                    new ShoppingCartItem
-                    {
-                        Dish = new Dish { Id = Guid.NewGuid(), Name = "Dish2", Price = 1 },
-                        Quantity = 1
-                    }
-                }
-            };
+            var dish1 = new Dish { Id = dishId, Name = "Dish1", Price = 1 };
+            var dish2 = new Dish { Id = Guid.NewGuid(), Name = "Dish2", Price = 1 };
+            var cart = new ShoppingCart(Guid.NewGuid(), Guid.NewGuid(), "TestUser1");
+            cart.AddOneToCart(dish1);
+            cart.AddOneToCart(dish2);
 
             // Act
             cart.RemoveOneFromCart(dishId);
@@ -276,7 +216,7 @@ namespace Domain.UnitTests
         public void RemoveOneFromCart_ItemNotInCart_ShouldThrowItemNotInCartThrowException()
         {
             //Arrange
-            var cart = new ShoppingCart { CustomerUsername = "TestUser1" }; 
+            var cart = new ShoppingCart(Guid.NewGuid(), Guid.NewGuid(), "TestUser1");
 
             // Act & Assert
             var exception = Assert.Throws<ItemNotInCartException>(() => cart.RemoveOneFromCart(Guid.NewGuid()));

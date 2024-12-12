@@ -9,43 +9,40 @@ namespace Domain.UnitTests.Helpers
         {
             yield return new object[]
             {
-            new ShoppingCart
-            {
-                CustomerUsername = "TestUser1",
-                CartItems = new List<ShoppingCartItem>
-                {
-                    new ShoppingCartItem
+                CreateShoppingCartWithItems(
+                    "TestUser1",
+                    new (Dish, int)[] 
                     {
-                        Dish = new Dish { Id = Guid.NewGuid(), Name = "Dish1", Price = 100 },
-                        Quantity = 2
-                    },
-                    new ShoppingCartItem
-                    {
-                        Dish = new Dish { Id = Guid.NewGuid(), Name = "Dish2", Price = 200 },
-                        Quantity = 1
-                    }
-                }
-            },
-            // Expected total price
-            400
+                        (new Dish { Id = Guid.NewGuid(), Name = "Dish1", Price = 100 }, 2),
+                        (new Dish { Id = Guid.NewGuid(), Name = "Dish2", Price = 200 }, 1)
+                    }),
+                // Expected total price
+                400
             };
 
             yield return new object[]
             {
-            new ShoppingCart
-            {
-                CustomerUsername = "TestUser2",
-                CartItems = new List<ShoppingCartItem>
-                {
-                    new ShoppingCartItem
+                CreateShoppingCartWithItems(
+                    "TestUser2",
+                    new (Dish, int)[]
                     {
-                        Dish = new Dish { Id = Guid.NewGuid(), Name = "Dish3", Price = 50 },
-                        Quantity = 5
-                    }
-                }
-            },
-            250
+                        (new Dish { Id = Guid.NewGuid(), Name = "Dish3", Price = 50 }, 5)
+                    }),
+                250
             };
+        }
+
+        private static ShoppingCart CreateShoppingCartWithItems(string customerUsername, (Dish, int)[] items)
+        {
+            var cart = new ShoppingCart(Guid.NewGuid(), Guid.NewGuid(), customerUsername);
+            foreach (var (dish, quantity) in items)
+            {
+                for (int i = 0; i < quantity; i++)
+                {
+                    cart.AddOneToCart(dish);
+                }
+            }
+            return cart;
         }
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();

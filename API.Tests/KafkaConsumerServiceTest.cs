@@ -36,12 +36,7 @@ namespace API.Tests
                 }
             };
 
-            ShoppingCart expectedCart = new ShoppingCart
-            {
-                CustomerId = customerId,
-                RestaurantId = restaurantId,
-                CustomerUsername = "TestUser"
-            };
+            ShoppingCart expectedCart = new ShoppingCart(customerId, restaurantId, catalogDTO.CustomerUsername);
             foreach (var dish in catalogDTO.Dishes)
             {
                 expectedCart.AddOneToCart(dish);
@@ -57,11 +52,11 @@ namespace API.Tests
                     cart.RestaurantId == expectedCart.RestaurantId &&
                     cart.CustomerUsername == expectedCart.CustomerUsername &&
                     cart.CartItems.Count == expectedCart.CartItems.Count &&
-                    cart.CartItems.TrueForAll(item =>
-                        expectedCart.CartItems.Exists(expectedItem =>
-                            expectedItem.Dish.Id == item.Dish.Id &&
-                            expectedItem.Quantity == item.Quantity)
-                    )
+                    cart.CartItems.All(cartItem =>
+                        expectedCart.CartItems.Any(expectedItem =>
+                            expectedItem.Dish.Id == cartItem.Dish.Id &&
+                            expectedItem.Quantity == cartItem.Quantity)
+                        )
                 )),
                 Times.Once
             );

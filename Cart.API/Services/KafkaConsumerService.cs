@@ -15,12 +15,7 @@ namespace Cart.API.Services
 
         public async void ProcessMessageAsync(CatalogDTO catalogDTO)
         {
-            var cart = new ShoppingCart()
-            {
-                CustomerId = catalogDTO.CustomerId,
-                RestaurantId = catalogDTO.RestaurantId,
-                CustomerUsername = catalogDTO.CustomerUsername
-            };
+            var cart = new ShoppingCart(catalogDTO.CustomerId, catalogDTO.RestaurantId, catalogDTO.CustomerUsername);
 
             foreach (Dish dish in catalogDTO.Dishes)
             {

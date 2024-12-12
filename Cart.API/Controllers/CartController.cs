@@ -100,7 +100,7 @@ namespace Cart.API.Controllers
                 _logger.LogInformation("Order creation initiated for user: {customerUsername}", customerUsername);
                 await _kafkaProducerService.Produce(cart);
 
-                return Accepted("Your order is being processed");
+                return Accepted("Your order is being processed"); //the request has been accepted for processing, but the processing has not been finished yet.
             }
             catch (Exception ex)
             {

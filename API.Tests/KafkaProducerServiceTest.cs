@@ -14,7 +14,7 @@ namespace API.Tests
             var kafkaProducerMock = new Mock<IKafkaProducer>();
             var service = new KafkaProducerService(kafkaProducerMock.Object);
 
-            var cart = new ShoppingCart { CustomerUsername = "TestUser1" };
+            var cart = new ShoppingCart(Guid.NewGuid(), Guid.NewGuid(), "TestUser1");
 
             kafkaProducerMock
                 .Setup(p => p.ProduceAsync<ShoppingCart>(
