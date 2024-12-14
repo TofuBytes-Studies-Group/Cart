@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Cart.Domain.Exceptions;
+
 namespace Cart.Domain.Entities
 {
     public class ShoppingCartItem
@@ -14,9 +11,9 @@ namespace Cart.Domain.Entities
         public ShoppingCartItem(Dish dish, int quantity = 1)
         {
             if (dish == null)
-                throw new ArgumentNullException(nameof(dish));
+                throw new ArgumentNullException("Dish cannot be null");
             if (quantity <= 0)
-                throw new ArgumentException("Quantity must be greater than zero.");
+                throw new NegativeOrZeroAmountException("Quantity must be greater than zero.");
             
             Dish = dish;
             Quantity = quantity;
@@ -25,7 +22,7 @@ namespace Cart.Domain.Entities
         public void IncreaseQuantity(int amount = 1)
         {
             if (amount <= 0)
-                throw new ArgumentException("Amount must be greater than zero.");
+                throw new NegativeOrZeroAmountException("Amount must be greater than zero.");
 
             Quantity += amount;
         }
@@ -33,7 +30,7 @@ namespace Cart.Domain.Entities
         public void DecreaseQuantity(int amount = 1)
         {
             if (amount <= 0)
-                throw new ArgumentException("Amount must be greater than zero.");
+                throw new NegativeOrZeroAmountException("Amount must be greater than zero.");
 
             Quantity -= amount;
         }
