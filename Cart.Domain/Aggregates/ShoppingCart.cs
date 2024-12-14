@@ -28,11 +28,11 @@ namespace Cart.Domain.Aggregates
             var existingCartItem = _cartItems.SingleOrDefault(cartItem => cartItem.Dish.Id == dish.Id);
             if (existingCartItem != null)
             {
-                existingCartItem.Quantity += 1;
+                existingCartItem.IncreaseQuantity();
             }
             else
             {
-                _cartItems.Add(new ShoppingCartItem { Dish = dish, Quantity = 1 });
+                _cartItems.Add(new ShoppingCartItem(dish));
             }
         }
 
@@ -41,7 +41,7 @@ namespace Cart.Domain.Aggregates
             var item = _cartItems.SingleOrDefault(cartItem => cartItem.Dish.Id == dishId);
             if (item != null)
             {
-                item.Quantity -= 1;
+                item.DecreaseQuantity();
                 if (item.Quantity <= 0)
                 {
                     _cartItems.Remove(item);

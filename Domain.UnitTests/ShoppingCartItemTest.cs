@@ -18,11 +18,7 @@ namespace Domain.UnitTests
                 Price = price
             };
 
-            var cartItem = new ShoppingCartItem
-            {
-                Dish = dish,
-                Quantity = quantity
-            };
+            var cartItem = new ShoppingCartItem(dish,quantity);
 
             // Act
             var actualSum = cartItem.SumPrice;
@@ -30,5 +26,7 @@ namespace Domain.UnitTests
             // Assert
             Assert.Equal(expectedSum, actualSum);
         }
+
+        //TODO test increase/decrease methods
     }
 }
