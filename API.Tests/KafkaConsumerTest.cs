@@ -7,6 +7,7 @@ using Card.API.Kafka;
 using Cart.API.Services;
 using Cart.API.Kafka.DTOs;
 using Cart.Domain.Entities;
+using Castle.Core.Resource;
 
 namespace API.Tests
 {
@@ -43,7 +44,7 @@ namespace API.Tests
         }
 
         [Fact]
-        public async Task ExecuteAsync_ShouldProcesMessageCorrect()
+        public async Task ExecuteAsync_ValidMessage_ShouldProcesMessageCorrect()
         {
             // Arrange
             var customerId = Guid.NewGuid();
@@ -90,6 +91,98 @@ namespace API.Tests
 
             _mockConsumer.Verify(consumer => consumer.Subscribe("add.to.cart"), Times.Once);
             _mockConsumer.Verify(consumer => consumer.Consume(It.IsAny<TimeSpan>()), Times.AtLeastOnce);
+        }
+
+        [Fact]
+        public async Task ExecuteAsync_InvalidJsonFormat_ShouldNotProcessMessage()
+        {
+            // Arrange
+            var invalidCatalogDto = new CatalogDTO
+            {
+                CustomerId = Guid.Empty,
+                RestaurantId = Guid.Empty,
+                CustomerUsername = String.Empty,
+                Dishes = new List<Dish>
+                {
+                    new Dish { Id = Guid.NewGuid(), Name = String.Empty, Price = -1 }
+                }
+            };
+            var invalidMessage = JsonConvert.SerializeObject(invalidCatalogDto);
+
+            _mockConsumer
+                .Setup(consumer => consumer.Consume(It.IsAny<TimeSpan>()))
+                .Returns(new ConsumeResult<string, string>
+                {
+                    Message = new Message<string, string>
+                    {
+                        Key = "key",
+                        Value = invalidMessage
+                    }
+                });
+
+            var kafkaConsumer = CreateKafkaConsumer();
+
+            // Act
+            var cts = new CancellationTokenSource();
+            cts.CancelAfter(2000);
+            await kafkaConsumer.StartAsync(cts.Token);
+
+            // Assert
+            _mockConsumerService.Verify(
+                service => service.ProcessMessageAsync(It.IsAny<CatalogDTO>()),
+                Times.Never
+            );
+
+            _mockLogger.Verify(
+                logger => logger.Log(
+                    It.Is<LogLevel>(logLevel => logLevel == LogLevel.Error),
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((@object, @type) => @object.ToString().Equals("Invalid catalogDto format.")),
+                    It.IsAny<Exception>(),
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+                Times.Once
+            );
+        }
+
+        [Fact]
+        public async Task ExecuteAsync_InvalidCatalogDTO_ShouldNotProcessMessage()
+        {
+            // Arrange
+            var invalidMessage = "{ \"invalid\": }";
+
+            _mockConsumer
+                .Setup(consumer => consumer.Consume(It.IsAny<TimeSpan>()))
+                .Returns(new ConsumeResult<string, string>
+                {
+                    Message = new Message<string, string>
+                    {
+                        Key = "key",
+                        Value = invalidMessage
+                    }
+                });
+
+            var kafkaConsumer = CreateKafkaConsumer();
+
+            // Act
+            var cts = new CancellationTokenSource();
+            cts.CancelAfter(2000);
+            await kafkaConsumer.StartAsync(cts.Token);
+
+            // Assert
+            _mockConsumerService.Verify(
+                service => service.ProcessMessageAsync(It.IsAny<CatalogDTO>()),
+                Times.Never
+            );
+
+            _mockLogger.Verify(
+                logger => logger.Log(
+                    It.Is<LogLevel>(logLevel => logLevel == LogLevel.Error),
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((@object, @type) => @object.ToString().Contains("Error deserializing message:")),
+                    It.IsAny<Exception>(),
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+                Times.Once
+            );
         }
 
         [Fact]

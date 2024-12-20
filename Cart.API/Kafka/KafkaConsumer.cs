@@ -1,5 +1,6 @@
 ﻿using Cart.API.Kafka.DTOs;
 using Cart.API.Services;
+using Cart.API.Utils;
 using Confluent.Kafka;
 using Newtonsoft.Json;
 
@@ -48,18 +49,27 @@ namespace Card.API.Kafka
                             var message = consumeResult.Message.Value;
                             var key = consumeResult.Message.Key;
 
-                            _logger.LogInformation($"Received Message: {message}, Key: {key}");
-                            
+                            _logger.LogInformation($"Received Kafka message with key: {key}");
+
                             var catalogDto = JsonConvert.DeserializeObject<CatalogDTO>(message);
-                            if (catalogDto != null)
+                            if (catalogDto != null && InputValidator.IsValidCatalogDTO(catalogDto))
                             {
+                                _logger.LogInformation($"Processing message");
                                 _consumerService.ProcessMessageAsync(catalogDto);
+                            }
+                            else
+                            {
+                                _logger.LogError("Invalid catalogDto format.");
                             }
                         }
                     }
                     catch (ConsumeException ex)
                     {
                         _logger.LogError($"Error consuming Kafka message: {ex.Message}");
+                    }
+                    catch (JsonException ex)
+                    {
+                        _logger.LogError($"Error deserializing message: {ex.Message}");
                     }
                     await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
                 }

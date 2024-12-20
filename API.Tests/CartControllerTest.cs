@@ -66,7 +66,7 @@ namespace API.Tests
             // Arrange
             var controller = SetUp();
 
-            string username = "nonexistentUser";
+            string username = "noUser";
 
             // Act
             var result = await controller.GetCartAsync(username);
@@ -102,7 +102,7 @@ namespace API.Tests
         }
 
         [Fact]
-        public async void AddOneToCart_ItemNotInCart_ShouldAddItemToCart()
+        public async void AddOneToCart_DishNotInCart_ShouldAddDishToCart()
         {
             // Arrange
             var controller = SetUp();
@@ -122,7 +122,7 @@ namespace API.Tests
         }
 
         [Fact]
-        public async void AddOneToCart_ItemAlreadyInCart_ShouldAddOneToQuantity()
+        public async void AddOneToCart_DishAlreadyInCart_ShouldAddOneToQuantity()
         {
             // Arrange
             var controller = SetUp();
@@ -142,7 +142,7 @@ namespace API.Tests
         }
 
         [Fact]
-        public async void AddOneToCart_ItemIsNull_ReturnBadRequest()
+        public async void AddOneToCart_DishIsNull_ReturnBadRequest()
         {
             // Arrange
             var controller = SetUp();
@@ -159,7 +159,7 @@ namespace API.Tests
         }
 
         [Fact]
-        public async void RemoveOneFromCart_ItemAlreadyInCart_ShouldDecreaseQuantityByOne()
+        public async void RemoveOneFromCart_DishAlreadyInCart_ShouldDecreaseQuantityByOne()
         {
             // Arrange
             var controller = SetUp();
@@ -181,7 +181,7 @@ namespace API.Tests
         }
 
         [Fact]
-        public async void RemoveOneFromCart_OnlyOneItemInCart_ShouldRemoveItemCompletely()
+        public async void RemoveOneFromCart_OnlyOneDishInCart_ShouldRemoveDishCompletely()
         {
             // Arrange
             var controller = SetUp();
@@ -202,7 +202,7 @@ namespace API.Tests
         }
 
         [Fact]
-        public async void RemoveOneFromCart_ItemNotInCart_ShouldReturnNotFound()
+        public async void RemoveOneFromCart_DishNotInCart_ShouldReturnNotFound()
         {
             // Arrange
             var controller = SetUp();
@@ -218,8 +218,12 @@ namespace API.Tests
             Assert.Equal("Item not found in cart", notFoundResult.Value);
         }
 
-        [Fact]
-        public async void RemoveAllFromCart_ItemInCart_ShouldRemoveItemCompletely()
+        [Theory]
+        [InlineData(2)]
+        [InlineData(5)]
+        [InlineData(10)]
+        [InlineData(100)]
+        public async void RemoveAllFromCart_MoreThanOneDishInCart_ShouldRemoveDishCompletely(int amountAlreadyInCart)
         {
             // Arrange
             var controller = SetUp();
@@ -227,8 +231,10 @@ namespace API.Tests
             string username = "TestUser1";
             var dishId = Guid.NewGuid();
             var dish = new Dish { Id = dishId, Name = "Dish1", Price = 1 };
-            await controller.AddOneToCartAsync(username, dish);
-            await controller.AddOneToCartAsync(username, dish);
+            for (int i = 0; i < amountAlreadyInCart; i++)
+            {
+                await controller.AddOneToCartAsync(username, dish);
+            }
 
             // Act
             var result = await controller.RemoveAllFromCartAsync(username, dishId);
@@ -240,7 +246,7 @@ namespace API.Tests
         }
 
         [Fact]
-        public async void RemoveAllFromCart_ItemNotInCart_ShouldReturnNotFound()
+        public async void RemoveAllFromCart_DishNotInCart_ShouldReturnNotFound()
         {
             // Arrange
             var controller = SetUp();
@@ -322,7 +328,7 @@ namespace API.Tests
         {
             // Arrange
             var controller = SetUp();
-            var username = "nonexistentUser";
+            var username = "noUser";
 
             // Act
             var result = await controller.OrderAsync(username);
@@ -331,5 +337,86 @@ namespace API.Tests
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
             Assert.Equal("Cannot place an order with an empty cart", badRequestResult.Value);
         }
+
+        [Fact]
+        public async void GetCart_InvalidUsernameFormat_ShouldReturnBadRequest()
+        {
+            // Arrange
+            var controller = SetUp();
+            string invalidUsername = "invalid#username";  
+
+            // Act
+            var result = await controller.GetCartAsync(invalidUsername);
+
+            // Assert
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result.Result);
+            Assert.Equal("Invalid username format.", badRequestResult.Value);
+        }
+
+        [Fact]
+        public async void AddOneToCart_InvalidUsernameFormat_ShouldReturnBadRequest()
+        {
+            // Arrange
+            var controller = SetUp();
+            string invalidUsername = "invalid#username";  
+            var dish = new Dish { Id = Guid.NewGuid(), Name = "Dish1", Price = 1 };
+
+            // Act
+            var result = await controller.AddOneToCartAsync(invalidUsername, dish);
+
+            // Assert
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result.Result);
+            Assert.Equal("Invalid username format.", badRequestResult.Value);
+        }
+
+        [Fact]
+        public async void AddOneToCart_InvalidDish_ShouldReturnBadRequest()
+        {
+            // Arrange
+            var controller = SetUp();
+            string username = "TestUser1";
+            var invalidDish = new Dish { Id = Guid.NewGuid(), Name = String.Empty, Price = -1 };  
+
+            // Act
+            var result = await controller.AddOneToCartAsync(username, invalidDish);
+
+            // Assert
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result.Result);
+            Assert.Equal("Dish information is invalid.", badRequestResult.Value);
+        }
+
+        [Fact]
+        public async void RemoveOneFromCart_InvalidDishId_ShouldReturnBadRequest()
+        {
+            // Arrange
+            var controller = SetUp();
+            string username = "TestUser1";
+            var invalidDishId = Guid.Empty;  
+
+            // Act
+            var result = await controller.RemoveOneFromCartAsync(username, invalidDishId);
+
+            // Assert
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result.Result);
+            Assert.Equal("Invalid dishId.", badRequestResult.Value);
+        }
+
+        [Fact]
+        public async void RemoveAllFromCart_InvalidDishId_ShouldReturnBadRequest()
+        {
+            // Arrange
+            var controller = SetUp();
+            string username = "TestUser1";
+            var invalidDishId = Guid.Empty;  
+
+            // Act
+            var result = await controller.RemoveAllFromCartAsync(username, invalidDishId);
+
+            // Assert
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result.Result);
+            Assert.Equal("Invalid dishId.", badRequestResult.Value);
+        }
+
+
     }
 }

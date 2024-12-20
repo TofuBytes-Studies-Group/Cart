@@ -4,6 +4,7 @@ using Cart.Domain.Aggregates;
 using Cart.Domain.Entities;
 using Cart.Domain.Exceptions;
 using Card.API.Kafka;
+using Cart.API.Utils;
 
 namespace Cart.API.Controllers
 {
@@ -25,8 +26,10 @@ namespace Cart.API.Controllers
         [HttpGet("{customerUsername}")]
         public async Task<ActionResult<ShoppingCart>> GetCartAsync(string customerUsername)
         {
-            _logger.LogInformation("Fetching cart for user: {customerUsername}", customerUsername);
+            var validationResult = ValidateInputs(customerUsername);
+            if (validationResult != null) return validationResult;
 
+            _logger.LogInformation("Fetching cart for user: {customerUsername}", customerUsername);
             var cart = await _cartService.GetCartAsync(customerUsername);
             _logger.LogInformation("Cart fetched successfully for user: {customerUsername}", customerUsername);
 
@@ -41,6 +44,8 @@ namespace Cart.API.Controllers
                 _logger.LogWarning("AddOneToCart failed: Dish is null for user: {customerUsername}", customerUsername);
                 return BadRequest("Dish cannot be null.");
             }
+            var validationResult = ValidateInputs(customerUsername, dish);
+            if (validationResult != null) return validationResult;
 
             _logger.LogInformation("Adding dish to cart for user: {customerUsername}, Dish: {DishName}", customerUsername, dish.Name);
             var cart = await _cartService.AddOneToCartAsync(customerUsername, dish);
@@ -52,6 +57,9 @@ namespace Cart.API.Controllers
         [HttpDelete("{customerUsername}/remove-one/{dishId}")]
         public async Task<ActionResult<ShoppingCart>> RemoveOneFromCartAsync(string customerUsername, Guid dishId)
         {
+            var validationResult = ValidateInputs(customerUsername, null, dishId);
+            if (validationResult != null) return validationResult;
+
             try
             {
                 _logger.LogInformation("Removing one instance of dish from cart for user: {customerUsername}, DishId: {DishId}", customerUsername, dishId);
@@ -70,6 +78,9 @@ namespace Cart.API.Controllers
         [HttpDelete("{customerUsername}/remove-all/{dishId}")]
         public async Task<ActionResult<ShoppingCart>> RemoveAllFromCartAsync(string customerUsername, Guid dishId)
         {
+            var validationResult = ValidateInputs(customerUsername, null, dishId);
+            if (validationResult != null) return validationResult;
+
             try
             {
                 _logger.LogInformation("Removing all instances of dish from cart for user: {customerUsername}, DishId: {DishId}", customerUsername, dishId);
@@ -88,6 +99,9 @@ namespace Cart.API.Controllers
         [HttpPost("{customerUsername}/order")]
         public async Task<ActionResult> OrderAsync(string customerUsername)
         {
+            var validationResult = ValidateInputs(customerUsername);
+            if (validationResult != null) return validationResult;
+
             try
             {
                 _logger.LogInformation("Processing order for user: {customerUsername}", customerUsername);
@@ -109,5 +123,27 @@ namespace Cart.API.Controllers
             }
         }
 
+        private ActionResult? ValidateInputs(string customerUsername, Dish? dish = null, Guid? dishId = null)
+        {
+            if (!InputValidator.IsValidUsername(customerUsername))
+            {
+                _logger.LogWarning("Invalid username format: {customerUsername}", customerUsername);
+                return BadRequest("Invalid username format.");
+            }
+
+            if (dish != null && !InputValidator.IsValidDish(dish))
+            {
+                _logger.LogWarning("Invalid dish: {dish} provided for user: {customerUsername}", dish, customerUsername);
+                return BadRequest("Dish information is invalid.");
+            }
+
+            if (dishId.HasValue && !InputValidator.IsValidDishId(dishId))
+            {
+                _logger.LogWarning("Invalid dishId: {dishId}", dishId);
+                return BadRequest("Invalid dishId.");
+            }
+
+            return null; // Validation passed
+        }
     }
 }
