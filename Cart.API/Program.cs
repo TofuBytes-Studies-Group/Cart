@@ -24,7 +24,10 @@ builder.Services.AddSingleton<IKafkaProducerService, KafkaProducerService>();
 builder.Services.AddSingleton<CartService>();
 
 // Add redis
-builder.Services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect("localhost:6379"));
+builder.Services.AddSingleton<IConnectionMultiplexer>(
+    ConnectionMultiplexer.Connect(
+        builder.Configuration.GetConnectionString("Redis")
+        )); 
 builder.Services.AddSingleton<ICartRepository, RedisCartRepository>();
 
 var app = builder.Build();

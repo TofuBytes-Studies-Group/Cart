@@ -26,6 +26,8 @@ namespace API.Tests
             _mockConsumer = new Mock<IConsumer<string, string>>();
 
             _mockConfiguration.Setup(config => config["Kafka:BootstrapServers"]).Returns("localhost:9092");
+            _mockConfiguration.Setup(config => config["Kafka:GroupId"]).Returns("groupId");
+            _mockConfiguration.Setup(config => config["Kafka:ConsumerTopic"]).Returns("add.to.cart");
         }
 
         private KafkaConsumer CreateKafkaConsumer()

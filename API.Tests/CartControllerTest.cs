@@ -274,7 +274,7 @@ namespace API.Tests
 
             kafkaProducerMock
                 .Setup(p => p.ProduceAsync<ShoppingCart>(
-                    It.IsAny<string>(), It.IsAny<string>(), It.IsAny<ShoppingCart>()))
+                    It.IsAny<string>(), It.IsAny<ShoppingCart>()))
                 .Returns(Task.CompletedTask);
 
             // Repository Mock
@@ -313,7 +313,7 @@ namespace API.Tests
 
             // Assert
             kafkaProducerMock.Verify(p => p.ProduceAsync<ShoppingCart>(
-                "create.order", username, It.Is<ShoppingCart>(
+                username, It.Is<ShoppingCart>(
                     c => c.CustomerUsername == username && c.CartItems.Count == 1 && c.CartItems[0].Dish.Id == dishId)),
                 Times.Once);
 

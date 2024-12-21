@@ -13,7 +13,7 @@ namespace Cart.API.Services
 
         public async Task Produce(ShoppingCart cart)
         {
-            await _kafkaProducer.ProduceAsync<ShoppingCart>("create.order", cart.CustomerUsername, cart);
+            await _kafkaProducer.ProduceAsync<ShoppingCart>(cart.CustomerUsername, cart);
         }
     }
 }
