@@ -20,7 +20,10 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL: PLAINTEXT
+      KAFKA_LISTENER_PORTS: 9092
+      KAFKA_LISTENER_NAMES: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     networks:
       - kafka-network
@@ -32,6 +35,23 @@ services:
       - "6379:6379"
       volumes:
       - /path/to/local/dаta:/root/redis
+      networks:
+      - kafka-network
+
+  cart.api:
+    image: cartapi
+    ports:
+      - "5000:80"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - kafka
+      - redis
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+    networks:
+      - kafka-network
 
 networks:
   kafka-network:
