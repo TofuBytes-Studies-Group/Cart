@@ -1,5 +1,6 @@
 ﻿using Cart.API.Kafka.DTOs;
 using Cart.API.Services;
+using Cart.API.Utils;
 using Confluent.Kafka;
 using Newtonsoft.Json;
 
@@ -7,24 +8,23 @@ namespace Card.API.Kafka
 {
     public class KafkaConsumer : BackgroundService
     {
-        private readonly IConfiguration _configuration;
         private readonly ILogger<KafkaConsumer> _logger;
 
         private readonly IConsumer<string, string> _consumer;
         private readonly IKafkaConsumerService _consumerService;
+        private readonly string? _topic;
 
         public KafkaConsumer(IConfiguration configuration, ILogger<KafkaConsumer> logger, IKafkaConsumerService consumerService)
         {
-            _configuration = configuration;
             _logger = logger;
 
             var config = new ConsumerConfig
             {
                 BootstrapServers = configuration["Kafka:BootstrapServers"],
-                // TODO
-                GroupId = "groupId",
+                GroupId = configuration["Kafka:GroupId"],
                 AutoOffsetReset = AutoOffsetReset.Earliest
             };
+            _topic = configuration["Kafka:ConsumerTopic"];
 
             _consumer = new ConsumerBuilder<string, string>(config).Build();
             _consumerService = consumerService;
@@ -32,7 +32,7 @@ namespace Card.API.Kafka
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _consumer.Subscribe("add.to.cart");
+            _consumer.Subscribe(_topic);
 
             try
             {
@@ -48,18 +48,27 @@ namespace Card.API.Kafka
                             var message = consumeResult.Message.Value;
                             var key = consumeResult.Message.Key;
 
-                            _logger.LogInformation($"Received Message: {message}, Key: {key}");
-                            
+                            _logger.LogInformation($"Received Kafka message with key: {key}");
+
                             var catalogDto = JsonConvert.DeserializeObject<CatalogDTO>(message);
-                            if (catalogDto != null)
+                            if (catalogDto != null && InputValidator.IsValidCatalogDTO(catalogDto))
                             {
+                                _logger.LogInformation($"Processing message");
                                 _consumerService.ProcessMessageAsync(catalogDto);
+                            }
+                            else
+                            {
+                                _logger.LogError("Invalid catalogDto format.");
                             }
                         }
                     }
                     catch (ConsumeException ex)
                     {
                         _logger.LogError($"Error consuming Kafka message: {ex.Message}");
+                    }
+                    catch (JsonException ex)
+                    {
+                        _logger.LogError($"Error deserializing message: {ex.Message}");
                     }
                     await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
                 }

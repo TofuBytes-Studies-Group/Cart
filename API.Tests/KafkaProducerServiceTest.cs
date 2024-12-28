@@ -18,14 +18,14 @@ namespace API.Tests
 
             kafkaProducerMock
                 .Setup(p => p.ProduceAsync<ShoppingCart>(
-                    It.IsAny<string>(), It.IsAny<string>(), It.IsAny<ShoppingCart>()))
+                    It.IsAny<string>(), It.IsAny<ShoppingCart>()))
                 .Returns(Task.CompletedTask);
 
             // Act
             await service.Produce(cart);
 
             // Assert
-            kafkaProducerMock.Verify(p => p.ProduceAsync<ShoppingCart>("create.order", "TestUser1", cart),
+            kafkaProducerMock.Verify(p => p.ProduceAsync<ShoppingCart>("TestUser1", cart),
                 Times.Once);
 
             kafkaProducerMock.VerifyNoOtherCalls();

@@ -8,24 +8,24 @@ namespace Card.Infrastructure.Kafka
 {
     public class KafkaProducer: IKafkaProducer, IDisposable
     {
-        private readonly IConfiguration _configuration;
         private readonly ILogger<KafkaProducer> _logger;
         private readonly IProducer<string, string> _producer;
+        private readonly string? _topic;
 
         public KafkaProducer(IConfiguration configuration, ILogger<KafkaProducer> logger)
         {
-            _configuration = configuration;
             _logger = logger;
 
             var config = new ProducerConfig
             {
-                BootstrapServers = _configuration["Kafka:BootstrapServers"]
+                BootstrapServers = configuration["Kafka:BootstrapServers"]
             };
+            _topic = configuration["Kafka:ProducerTopic"];
 
             _producer = new ProducerBuilder<string, string>(config).Build();
         }
 
-        public async Task ProduceAsync<ShoppingCart>(string topic, string key, ShoppingCart value)
+        public async Task ProduceAsync<ShoppingCart>(string key, ShoppingCart value)
         {
             try
             {
@@ -36,7 +36,7 @@ namespace Card.Infrastructure.Kafka
 
                 // ProduceAsync sends the message to Kafka.
                 // The result contains metadata about the message that we can assign to a var if interested
-                var deliveryResult = await _producer.ProduceAsync(topic, message);
+                var deliveryResult = await _producer.ProduceAsync(_topic, message);
 
                 // We can log the deliveryResult fx
                 _logger.LogInformation($"Message sent to {deliveryResult.Topic}");
